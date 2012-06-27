@@ -1,0 +1,250 @@
+function rightPad(str, padString, length) {
+    while (str.length < length)
+        str = str + padString;
+    return str;
+}
+
+var lines = [], commands = [], commandHistory = [], longestCmdName = 0, maxHistory = 10,
+visible = 0, font = GetSystemFont(), fontHeight = font.getHeight(), width = GetScreenWidth(),
+height = GetScreenHeight() / 2, keyString = '', cursorVisible = true, startTime = GetTime(), hasInput = true,
+cursorDelay = 400, cursorPos = 0, upKey = 1, white = CreateColor(255, 255, 255), borderWidth = 4,
+inputHeight = fontHeight + 8, colors = {
+    //trim: CreateColor(90, 90, 90, 200),
+    background: CreateColor(0, 0, 0, 200),
+    border: CreateColor(0, 0, 0, 200),
+    //inputBackground: CreateColor(0, 0, 0, 215),
+    //borderDark: CreateColor(35, 35, 35, 200),
+    //borderLight: CreateColor(158, 158, 158, 200),
+    info: CreateColor(255, 255, 255),
+    warning: CreateColor(255, 255, 0),
+    error: CreateColor(255, 0, 0)
+};
+
+exports.__defineGetter__('hasInput', function () hasInput);
+exports.__defineSetter__('hasInput', function (value) { hasInput = value; });
+
+function addLine(line, indent, color) {
+    var pad = indent ? ' ' : '', i = 0, l;
+
+    Array.from(line).each(function (line) {
+	lines.push({text: pad + line, color: color || colors.info});
+    });
+}
+
+function addCmdHistory(line) {
+    if (commandHistory.length == maxHistory)
+        commandHistory.shift();
+    commandHistory.push(line);
+}
+
+function doCommand(command) {
+    var parms = command.trim().split(' '), cmd = commands[parms[0]], result;
+
+    if (cmd) {
+        result = cmd.action.apply(null, parms.slice(1));
+        if (result !== undefined)
+	    addLine(result, true);
+    }
+    else {
+        try {
+	    result = eval(command);
+        }
+        catch (e) {
+	    result = e.toString();
+        }
+        addLine(result, true);
+    }
+}
+
+function addCommand(cmd, desc, usage, action) {
+    if (cmd.length > longestCmdName)
+        longestCmdName = cmd.length;
+    commands[cmd.toLowerCase()] = {command: cmd, desc: desc, usage: usage, action: action};
+}
+exports.addCommand = addCommand;
+
+exports.init = function (fake) {
+    if (fake) {
+	exports.toggle = exports.render = exports.update = exports.addCommand =
+	    exports.info = exports.warning = exports.error = function () { };
+    }
+    else {
+	require('Arq/debug/console-commands');
+	KeyHooks.f3.add(toggle);
+	UpdateHooks.add(update);
+	RenderHooks.add(render);
+    }
+    Arq.console = exports;
+};
+
+function toggle() {
+    visible = visible.wrap(0, 2);
+    if (visible == 1)
+	height = GetScreenHeight() / 2;
+    else if (visible == 2)
+	height = 40 + inputHeight - borderWidth;
+    hasInput = true;
+}
+exports.toggle = toggle;
+
+function render() {
+    if (!visible)
+        return;
+
+    /*Rectangle(0, 0, 8, height - 40, colors.trim);
+      Rectangle(8, 0, 1, height - 40, colors.borderDark);	
+      Rectangle(9, 0, width - 18, height - 41, colors.background);
+      Rectangle(width - 9, 0, 1, height - 40, colors.borderLight);
+      Rectangle(width - 8, 0, 8,  height - 40, colors.trim);
+      Rectangle(width - 8, height - 32, 8, 24, colors.trim);
+      Rectangle(width - 9, height - 32, 1, 24, colors.borderLight);
+      Rectangle(9, height - 41, width - 18, 1,  colors.borderLight);
+      Rectangle(9, height - 32, width - 18, 23, colors.inputBackground);
+      Rectangle(9, height - 9, width - 18, 1, colors.borderLight);
+      Rectangle(0, height - 40, width, 8, colors.trim);
+      Rectangle(0, height - 8, width, 8, colors.trim);
+      Rectangle(0, height - 32, 8, 24, colors.trim);
+      Rectangle(8, height - 32, 1, 24, colors.borderDark);*/
+
+    Rectangle(0, 0, borderWidth, height - 40, colors.border);
+    Rectangle(borderWidth, 0, width - borderWidth * 2, height - 40 - borderWidth - inputHeight, colors.background);
+    Rectangle(width - borderWidth, 0, borderWidth, height - 40, colors.border);
+    Rectangle(borderWidth, height - 40 - borderWidth - inputHeight, width - borderWidth * 2, borderWidth, colors.border);
+    Rectangle(borderWidth, height - 40 - inputHeight, width - borderWidth * 2, inputHeight, colors.background);
+    Rectangle(0, height - 40, width, borderWidth, colors.border);
+
+    var line = height - fontHeight - 40 - inputHeight, l = lines.length - 1;
+
+    if (l * fontHeight < line)
+        line = l * fontHeight;
+
+    for (; l >= 0; --l) {
+	line -= fontHeight;
+	font.setColorMask(lines[l].color);
+	font.drawText(10, line + fontHeight, lines[l].text);
+	font.setColorMask(white);
+    }
+
+    if (hasInput)
+	font.drawText(borderWidth + 1, height - fontHeight - 40, keyString);
+
+    if (hasInput && cursorVisible)
+        font.drawText(borderWidth + 1 + font.getStringWidth(keyString.substr(0, cursorPos)), height - fontHeight - 40, '|');
+}
+exports.render = render;
+
+function update() {
+    if (!visible || !hasInput)
+        return;
+
+    // Update cursor state
+    if (GetTime() > startTime + cursorDelay) {
+        startTime = GetTime();
+        cursorVisible = !cursorVisible;
+    }
+
+    if (AreKeysLeft()) {
+        var key = GetKey(), temp;
+        switch (key) {
+	case KEY_BACKSPACE: {
+	    /*keyString = keyString.split('');
+	      keyString.splice((cursorPos - 1).max(0), 1);
+	      keyString = keyString.join('');*/
+	    keyString = keyString.substr(0, keyString.length - 1);
+	    break;
+	}
+	case KEY_UP: {
+	    if (visible == 1) {
+		if (commandHistory.length > 0) {
+		    keyString = commandHistory[commandHistory.length - upKey];
+		    cursorPos = keyString.length;
+		}
+		if (upKey < commandHistory.length)
+		    upKey++;
+	    }
+	    break;
+	}
+	case KEY_DOWN: {
+	    if (visible == 1) {
+		if (commandHistory.length > 0) {
+		    keyString = commandHistory[commandHistory.length - upKey];
+		    cursorPos = keyString.length;
+		}
+		if (upKey > 1)
+		    upKey--;
+	    }
+	    break;
+	}
+	case KEY_ENTER: {
+	    cursorPos = 0;
+	    upKey = 1;
+	    addLine(keyString);
+	    addCmdHistory(keyString);
+	    try {
+		doCommand(keyString);
+	    }
+	    catch (e) {
+		addLine(' ' + e);
+	    }
+	    keyString = '';
+	    break;
+	}
+	case KEY_LEFT: {
+	    if (cursorPos > 0)
+		cursorPos--;
+	    break;
+	}
+	case KEY_RIGHT: {
+	    if (cursorPos < keyString.length)
+		cursorPos++;
+	    break;
+	}
+	case KEY_HOME: {
+	    cursorPos = 0;
+	    break;
+	}
+	case KEY_END: {
+	    cursorPos = keyString.length;
+	    break;
+	}
+	default: {
+	    temp = keyString.substr(cursorPos, keyString.length);
+	    keyString = keyString.substr(0, cursorPos);
+	    keyString += GetKeyString(key, IsKeyPressed(KEY_SHIFT));
+	    keyString += temp;
+	    cursorPos++;
+	    break;
+	}
+	}
+    }
+}
+exports.update = update;
+
+exports.info = function (string) {
+    addLine(string, false);
+};
+
+exports.warn = function (string) {
+    addLine(string, false, colors.warning);
+};
+
+exports.error = function (string) {
+    addLine(string, false, colors.error)
+};
+
+addCommand('Help', 'Lists all commands or info for a particular command', 'help commandName', function (data) {
+    var cmd, cmds = [], i;
+    if (data && commands[data.toLowerCase()]) {
+        cmd = commands[data.toLowerCase()];
+        return [cmd.desc, 'Usage: ' + cmd.usage];
+    }
+    for (i in commands) {
+        if (commands.hasOwnProperty(i))
+	    cmds.push(rightPad(commands[i].command, ' ', longestCmdName + 4) + commands[i].desc);
+    }
+    return cmds;
+});
+addCommand('Clear', 'Clears console', 'clear', function () {
+    lines = [];
+    return false;
+});
