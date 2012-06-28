@@ -54,7 +54,7 @@ function startBattle(attacker) {
 	if (Arq.hasModule('cash'))
 	    text = text.slice(0, -1) + ' and $' + cashGain + '.';
 	if (collectedItems.length)
-	    '\n\nFound:\n' + Object.values(Object.map(collectedItems, function (i) i.item.name + ' x' + i.amount)).join('\n');
+	    text += '\n\nFound:\n' + Object.values(Object.map(collectedItems, function (i) i.item.name + ' x' + i.amount)).join('\n');
 	showResult(text);
     });
     activeBattle.addEvent('lose', function (expLoss) {
