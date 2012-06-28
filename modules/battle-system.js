@@ -37,7 +37,7 @@ function startBattle(attacker) {
     activeBattle.addEvent('finish', function () {
 	hud.hide();
 
-	Object.each(Arq.map(), function (thing) {
+	Object.each(Arq.map(), function (thing, name) {
 	    if (activeBattle.allMonsters.contains(thing.monsterInstance))
 		delete thing.monsterInstance;
 	});
@@ -61,9 +61,11 @@ function startBattle(attacker) {
 	showResult('Lost ' + expLoss + ' experience.');
     });
 
-    var hud = new HUD(party), boundUseWeapon = activeBattle.useWeapon.bind(activeBattle, activeBattle.activeMember);
+    var hud = new HUD(party), boundUseWeapon = function () { activeBattle.useWeapon(activeBattle.activeMember); };
 
-    hud.addEvent('selectItem', activeBattle.useItem.bind(activeBattle, activeBattle.activeMember));
+    hud.addEvent('selectItem', function (item) {
+	activeBattle.useItem(activeBattle.activeMember, item);
+    });
     hud.addEvent('selectPartyMember', activeBattle.setActivePartyMember.bind(activeBattle));
     hud.show();
 
