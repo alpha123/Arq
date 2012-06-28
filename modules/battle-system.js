@@ -102,16 +102,19 @@ exports.init = function () {
     Arq.hooks.mapLoad.add(function (mapName) {
 	Arq.logNote('Battle system: Loading battles for ' + mapName);
 	var map = Arq.map(mapName);
-	Object.each(loadBattles(mapName), function (data, person) {
-	    if (!hasOwn.call(added, person)) {
-		added[person] = true;
-		map[person].touch.add(function () {
-		    if (!map[person].monsterInstance) {
-			map[person].monsterInstance = monsters[map[person].monster].clone();
-			execute(data, map[person]);
-		    }
-		});
-	    }
+	Object.each(loadBattles(mapName), function (data, personRegex) {
+	    Arq.peopleMatching(personRegex).each(function (person) {
+		if (!hasOwn.call(added, person)) {
+		    Arq.logNote('Battle system: Adding touch event for ' + person);
+		    added[person] = true;
+		    map[person].touch.add(function () {
+			if (!map[person].monsterInstance) {
+			    map[person].monsterInstance = monsters[map[person].monster].clone();
+			    execute(data, map[person]);
+			}
+		    });
+		}
+	    });
 	});
     });
 };
