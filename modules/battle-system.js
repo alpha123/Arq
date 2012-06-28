@@ -38,7 +38,7 @@ function startBattle(attacker) {
 	hud.hide();
 
 	Object.each(Arq.map(), function (thing, name) {
-	    if (activeBattle.allMonsters.contains(thing.monsterInstance))
+	    if (thing && thing.monsterInstance && activeBattle.allMonsters.contains(thing.monsterInstance))
 		delete thing.monsterInstance;
 	});
 
