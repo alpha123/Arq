@@ -62,10 +62,11 @@ exports.BattleController = new Class({
 	return base + num;
     },
 
-    useItem: function (user, item) {
+    useItem: function (user, item, keep) {
 	var itemPerson = this.freshPersonName(item.name), data = {};
 	// `data` is an object that the ItemType methods can store arbitrary information in.
-	user.items.remove(item);
+	if (!keep)
+	    user.items.remove(item);
 	item.type.moveStart(item, itemPerson, data, user);
 	if (!item.type.skipDefaultMove) {
 	    UpdateHooks.add(function () {
@@ -93,7 +94,7 @@ exports.BattleController = new Class({
 
     useWeapon: function (user) {
 	if (user.equipment.weapon)
-	    this.useItem(user, user.equipment.weapon);
+	    this.useItem(user, user.equipment.weapon, true);
 	return this;
     },
 
