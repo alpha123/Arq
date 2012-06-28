@@ -73,10 +73,16 @@ function startBattle(attacker) {
 }
 
 function execute(battleData, attacker) {
+    attacker.movementPaused = true;
+
     if (!activeBattle)
-	startBattle(attacker);
+	startBattle(attacker.monsterInstance);
     else
-	activeBattle.addMonsters(attacker);
+	activeBattle.addMonsters(attacker.monsterInstance);
+
+    activeBattle.addEvent('finish', function () {
+	delete attacker.movementPaused;
+    });
 }
 
 function loadBattles(map) {
@@ -100,9 +106,9 @@ exports.init = function () {
 	    if (!hasOwn.call(added, person)) {
 		added[person] = true;
 		map[person].touch.add(function () {
-		    if (!activeBattle) {
+		    if (!map[person].monsterInstance) {
 			map[person].monsterInstance = monsters[map[person].monster].clone();
-			execute(data, map[person].monsterInstance);
+			execute(data, map[person]);
 		    }
 		});
 	    }

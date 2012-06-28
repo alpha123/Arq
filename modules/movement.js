@@ -14,6 +14,8 @@ exports.init = function () {
 
 	    if (chase) {
 		person.generator.add(function () {
+		    if (person.movementPaused) return;
+
 		    var personX = GetPersonX(name), personY = GetPersonY(name),
 		        playerX = GetPersonX(Lithonite.GIP), playerY = GetPersonY(Lithonite.GIP);
 
@@ -62,7 +64,8 @@ exports.init = function () {
 	    }
 	    else {
 		person.generator.add(function () {
-		    return followPath(name, path) < 0;
+		    if (!person.movementPaused)
+			return followPath(name, path) < 0;
 		});
 	    }
 	}
