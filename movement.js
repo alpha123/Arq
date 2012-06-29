@@ -25,14 +25,14 @@ function canMove(person, command, tiles) {
     return false;
 }
 
-function moveDirection(person, direction, tiles, immediate) {
-    move(person, global['COMMAND_MOVE_' + direction.toUpperCase()], tiles, immediate);
+function moveDirection(person, direction, tiles, immediate, callback) {
+    move(person, global['COMMAND_MOVE_' + direction.toUpperCase()], tiles, immediate, callback);
 }
 
 /**
    Moves a person a given number of tiles in a given direction.
 */
-function move(person, command, tiles, immediate) {
+function move(person, command, tiles, immediate, callback) {
     var faceDirection = command - (8 + (10 - command)),  // Turns COMMAND_MOVE_dir into COMMAND_FACE_dir
         distance = (command % 2 ? GetTileWidth() : GetTileHeight()) * tiles;
     // `command % 2` would be true for COMMAND_MOVE_EAST (11) and COMMAND_MOVE_WEST (13)
@@ -40,12 +40,19 @@ function move(person, command, tiles, immediate) {
     if (command != COMMAND_WAIT)
 	QueuePersonCommand(person, faceDirection, immediate);
     distance.times(QueuePersonCommand.pass([person, command, false]));
+    if (callback) {
+	// Kinda hacky, but gets the job done.
+	Arq.person(person).generator.add(function () {
+	    callback();
+	    return true;
+	}, 9);
+    }
 }
 
 /**
    Moves `person` in the direction of `target`.
 */
-function moveToward(person, target, tiles) {
+function moveToward(person, target, tiles, callback) {
     var personX = Math.floor(GetPersonX(person) / GetTileWidth()), personY = Math.floor(GetPersonY(person) / GetTileHeight()),
         targetX = Math.floor(GetPersonY(target) / GetTileWidth()), targetY = Math.floor(GetPersonY(target) / GetTileHeight()),
         directionX, directionY;
@@ -57,9 +64,9 @@ function moveToward(person, target, tiles) {
     else if (personY < targetY) directionY = 'south';
 
     if (directionX)
-	moveDirection(person, directionX, tiles, !!directionY);
+	moveDirection(person, directionX, tiles, !!directionY, callback);
     if (directionY)
-	moveDirection(person, directionY, tiles);
+	moveDirection(person, directionY, tiles, false, callback);
 }
 
 /**
