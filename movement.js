@@ -15,14 +15,14 @@ function canMove(person, command, tiles) {
 	return true;
     }
 
-    switch (command) {
-    case COMMAND_MOVE_NORTH: return checkObstruction(0, -1);
-    case COMMAND_MOVE_SOUTH: return checkObstruction(0, 1);
-    case COMMAND_MOVE_EAST: return checkObstruction(1, 0);
-    case COMMAND_MOVE_WEST: return checkObstruction(-1, 0);
-    case COMMAND_WAIT: return true;
-    }
-    return false;
+    var coords = {
+	10: [0, -1], // COMMAND_MOVE_NORTH
+	11: [1, 0],  // COMMAND_MOVE_EAST
+	12: [0, 1],  // COMMAND_MOVE_SOUTH
+	13: [-1, 0], // COMMAND_MOVE_WEST
+    };
+
+    return command == COMMAND_WAIT || checkObstruction.apply(null, coords[command]);
 }
 
 function moveDirection(person, direction, tiles, immediate, callback) {
