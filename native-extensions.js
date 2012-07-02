@@ -1,6 +1,6 @@
 // Utilities I use not found in MooTools
 
-(function () {
+(function (undefined) {
 
 String.implement('startsWith', function (substring) {
     return this.indexOf(substring) == 0;
@@ -75,6 +75,41 @@ Function.implement('chain', function (next) {
     return function () {
 	self.apply(this, arguments);
 	next.apply(this, arguments);
+    };
+});
+
+Function.implement('argumentNames', function () {
+    var source = '' + this;
+    return source.substring(source.indexOf('(') + 1, source.indexOf(')')).split(', ');
+});
+
+Function.implement('optional', function (defaults) {
+    if (!Array.isArray(defaults))
+        defaults = Array.from(arguments);
+
+    var fn = this,
+    // Jump through a few hoops so that this works with Function#keywords
+    newFn = Function(fn.argumentNames().join(','), ('' + function () {
+        var args = Array.from(arguments), defaults = arguments.callee.__defaultargs;
+        for (var i = 0, l = defaults.length; i < l; ++i) {
+            if (args[i] == null)
+                args[i] = defaults[i];
+        }
+        return arguments.callee.__originalfn.apply(this, args);
+    }).slice(13, -1));
+    newFn.__defaultargs = defaults;
+    newFn.__originalfn = fn;
+    return newFn;
+});
+
+Function.implement('keywords', function () {
+    var fn = this, names = arguments.length ? Array.isArray(arguments[0]) ? arguments[0] :
+	                   Array.from(arguments) : fn.argumentNames();
+
+    return function () {
+        if (arguments.length == 1 && typeOf(arguments[0] == 'object'))
+            return fn.apply(this, Object.values(Object.subset(arguments[0], names)));
+        return fn.apply(this, arguments);
     };
 });
 
