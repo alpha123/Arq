@@ -84,7 +84,7 @@ Function.implement('argumentNames', function () {
 });
 
 Function.implement('optional', function (defaults) {
-    if (!Array.isArray(defaults))
+    if (typeOf(defaults) != 'array')
         defaults = Array.from(arguments);
 
     var fn = this,
@@ -103,11 +103,11 @@ Function.implement('optional', function (defaults) {
 });
 
 Function.implement('keywords', function () {
-    var fn = this, names = arguments.length ? Array.isArray(arguments[0]) ? arguments[0] :
+    var fn = this, names = arguments.length ? typeOf(arguments[0]) == 'array' ? arguments[0] :
 	                   Array.from(arguments) : fn.argumentNames();
 
     return function () {
-        if (arguments.length == 1 && typeOf(arguments[0] == 'object'))
+        if (arguments.length == 1 && typeOf(arguments[0]) == 'object')
             return fn.apply(this, Object.values(Object.subset(arguments[0], names)));
         return fn.apply(this, arguments);
     };
