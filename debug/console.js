@@ -8,6 +8,7 @@ var lines = [], commands = [], commandHistory = [], longestCmdName = 0, maxHisto
 visible = 0, font = GetSystemFont(), fontHeight = font.getHeight(), width = GetScreenWidth(),
 height = GetScreenHeight() / 2, keyString = '', cursorVisible = true, startTime = GetTime(), hasInput = true,
 cursorDelay = 400, cursorPos = 0, upKey = 1, white = CreateColor(255, 255, 255), borderWidth = 4, scrollPos = 0,
+arrowUp = GetSystemUpArrow(), arrowDown = GetSystemDownArrow(), showUp = false, showDown = false,
 inputHeight = fontHeight + 8, colors = {
     //trim: CreateColor(90, 90, 90, 200),
     background: CreateColor(0, 0, 0, 200),
@@ -54,7 +55,11 @@ function doCommand(command) {
         }
         addLine(result, true);
     }
+
     scrollPos = 0;
+
+    if (lines.length > Math.floor(height / fontHeight) - 5)
+	showUp = true;
 }
 
 function addCommand(cmd, desc, usage, action) {
@@ -113,6 +118,11 @@ function render() {
     Rectangle(borderWidth, height - 40 - borderWidth - inputHeight, width - borderWidth * 2, borderWidth, colors.border);
     Rectangle(borderWidth, height - 40 - inputHeight, width - borderWidth * 2, inputHeight, colors.background);
     Rectangle(0, height - 40, width, borderWidth, colors.border);
+
+    if (showUp)
+	arrowUp.blit(width - borderWidth - arrowUp.width, 10);
+    if (showDown)
+	arrowDown.blit(width - borderWidth - arrowDown.width, height - 50 - arrowDown.height);
 
     var line = height - fontHeight - 40 - inputHeight, l = lines.length - 1 + scrollPos;
 
@@ -209,12 +219,26 @@ function update() {
 	    break;
 	}
 	case KEY_PAGEUP: {
-	    if (lines.length - 1 + scrollPos - (Math.floor(height / fontHeight) - 6) > 0)
+	    var top = lines.length - 1 + scrollPos - (Math.floor(height / fontHeight) - 6);
+	    if (top > 0) {
 		--scrollPos;
+		showDown = true;
+		if (top == 1)
+		    showUp = false;
+	    }
+	    else
+		showUp = false;
 	    break;
 	}
 	case KEY_PAGEDOWN: {
-	    scrollPos = (scrollPos + 1).min(0);
+	    if (scrollPos + 1 < 1) {
+		++scrollPos;
+		showUp = true;
+		if (scrollPos == 0)
+		    showDown = false;
+	    }
+	    else
+		showDown = false;
 	    break;
 	}
 	default: {
