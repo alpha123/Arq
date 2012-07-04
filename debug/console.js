@@ -232,7 +232,7 @@ exports.error = function (string) {
     addLine(string, false, colors.error)
 };
 
-addCommand('Help', 'Lists all commands or info for a particular command', 'help commandName', function (data) {
+addCommand('Help', 'Lists all commands or info for a particular command', 'help [command]', function (data) {
     var cmd, cmds = [], i;
     if (data && commands[data.toLowerCase()]) {
         cmd = commands[data.toLowerCase()];
