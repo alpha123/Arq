@@ -149,3 +149,10 @@ console.addCommand('Mix', "Remixes a person's spriteset", 'mix personName', func
 console.addCommand('Input', 'Toggles console input', 'input [on|off]', function (state) {
     console.hasInput = [toBool(state), !console.hasInput].pick();
 });
+
+console.addCommand('Purge', 'Purges the CommonJS cache', 'purge [file]', function (file) {
+    if (file)
+	delete require.cache[file];
+    else
+	require.cache = {};
+});
