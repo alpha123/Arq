@@ -7,7 +7,7 @@ function rightPad(str, padString, length) {
 var lines = [], commands = [], commandHistory = [], longestCmdName = 0, maxHistory = 10,
 visible = 0, font = GetSystemFont(), fontHeight = font.getHeight(), width = GetScreenWidth(),
 height = GetScreenHeight() / 2, keyString = '', cursorVisible = true, startTime = GetTime(), hasInput = true,
-cursorDelay = 400, cursorPos = 0, upKey = 1, white = CreateColor(255, 255, 255), borderWidth = 4,
+cursorDelay = 400, cursorPos = 0, upKey = 1, white = CreateColor(255, 255, 255), borderWidth = 4, scrollPos = 0,
 inputHeight = fontHeight + 8, colors = {
     //trim: CreateColor(90, 90, 90, 200),
     background: CreateColor(0, 0, 0, 200),
@@ -54,6 +54,7 @@ function doCommand(command) {
         }
         addLine(result, true);
     }
+    scrollPos = 0;
 }
 
 function addCommand(cmd, desc, usage, action) {
@@ -113,7 +114,7 @@ function render() {
     Rectangle(borderWidth, height - 40 - inputHeight, width - borderWidth * 2, inputHeight, colors.background);
     Rectangle(0, height - 40, width, borderWidth, colors.border);
 
-    var line = height - fontHeight - 40 - inputHeight, l = lines.length - 1;
+    var line = height - fontHeight - 40 - inputHeight, l = lines.length - 1 + scrollPos;
 
     if (l * fontHeight < line)
         line = l * fontHeight;
@@ -207,6 +208,15 @@ function update() {
 	    cursorPos = keyString.length;
 	    break;
 	}
+	case KEY_PAGEUP: {
+	    if (lines.length - 1 + scrollPos - (Math.floor(height / fontHeight) - 6) > 0)
+		--scrollPos;
+	    break;
+	}
+	case KEY_PAGEDOWN: {
+	    scrollPos = (scrollPos + 1).min(0);
+	    break;
+	}
 	default: {
 	    temp = keyString.substr(cursorPos, keyString.length);
 	    keyString = keyString.substr(0, cursorPos);
@@ -229,7 +239,7 @@ exports.warn = function (string) {
 };
 
 exports.error = function (string) {
-    addLine(string, false, colors.error)
+    addLine(string, false, colors.error);
 };
 
 addCommand('Help', 'Lists all commands or info for a particular command', 'help commandName', function (data) {
