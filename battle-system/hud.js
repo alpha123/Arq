@@ -4,11 +4,12 @@ statusTypes = require('Arq/battle-system/status-type').StatusType.all,
 floor = Math.floor,
 hudFont = require('Arq/resources').Fonts.standard,
 hudColor = CreateColor(255, 255, 255, 180),  // trans-white
-black = CreateColor(0, 0, 0), red = CreateColor(255, 0, 0), white = CreateColor(255, 255, 255),
+black = CreateColor(0, 0, 0), red = CreateColor(255, 0, 0), green = CreateColor(0, 255, 0),
+white = CreateColor(255, 255, 255), transparent = CreateColor(0, 0, 0, 0),
 screenWidth = GetScreenWidth(),
 screenHeight = GetScreenHeight(),
 partySelectWidth = floor(screenWidth * 0.1),
-partySelectOffset = floor(screenHeight * 0.03);
+partySelectOffset = floor(screenHeight * 0.05);
 itemListTop = screenHeight - floor(screenHeight * 0.4),
 itemListWidth = floor(screenWidth * 0.25),
 itemListHeight = screenHeight - itemListTop,
@@ -50,8 +51,8 @@ exports.HUD = new Class({
 	});
 	Object.each(party, function (member) {
 	    var zoom = +((partySelectWidth - floor(partySelectWidth / 4)) / member.portrait.width).toFixed(1),
-	    x = screenWidth - partySelectWidth + (partySelectWidth - member.portrait.width * zoom) / 2 + 1,
-	    y = partySelect.nextY() + partySelectOffset;
+	        x = screenWidth - partySelectWidth + (partySelectWidth - member.portrait.width * zoom) / 2 + 1,
+	        y = partySelect.nextY() + partySelectOffset / (partySelect.items.length ? 1 : 2);
 	    partySelect.add({
 		x: x,
 		y: y,
@@ -59,10 +60,15 @@ exports.HUD = new Class({
 		height: member.portrait.height * zoom,
 		item: {zoom: zoom, name: member.name},
 		render: function () {
-		    member.status.render(member.portrait, this.x, this.y, this.item.zoom, this.item.name);
+		    var portrait = CreateSurface(member.portrait.width * zoom, member.portrait.height * zoom + 14, transparent);
+		    member.status.render(portrait, member.portrait, 0, 0, this.item.zoom, this.item.name);
+		    portrait.outlinedRectangle(0, portrait.height - 11, portrait.width, 10, black, 1);
+		    portrait.rectangle(1, portrait.height - 10, member.hp.current / member.hp.max * (portrait.width - 2), 8,
+				       member.hp.current < member.hp.max / 3 ? red : green);
+		    portrait.blit(this.x, this.y);
 		},
 		highlightRender: function () {
-		    Rectangle(screenWidth - partySelectWidth, this.y - partySelectOffset / 2, partySelectWidth,
+		    Rectangle(screenWidth - partySelectWidth, this.y - partySelectOffset / 2 + 6, partySelectWidth,
 			      this.height + partySelectOffset, hudColor);
 		    this.render();
 		},
