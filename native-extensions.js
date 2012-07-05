@@ -14,6 +14,10 @@ String.implement('uncapitalize', function () {
     return this.replace(/\b[A-Z]/g, function (c) c.toLowerCase());
 });
 
+String.implement('reverse', function () {
+    return this.split('').reverse().join('');
+});
+
 // Taken verbatim from MooTools More
 var conversions = {	
     ms: 1,

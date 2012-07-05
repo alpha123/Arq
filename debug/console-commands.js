@@ -149,3 +149,29 @@ console.addCommand('Mix', "Remixes a person's spriteset", 'mix personName', func
 console.addCommand('Input', 'Toggles console input', 'input [on|off]', function (state) {
     console.hasInput = [toBool(state), !console.hasInput].pick();
 });
+
+console.addCommand('Purge', 'Purges the CommonJS cache', 'purge [file]', function (file) {
+    if (file)
+	delete require.cache[file];
+    else
+	require.cache = {};
+});
+
+console.addCommand('Reload', 'Reloads a CommonJS module', 'reload variable file', function (varName, fileAndKeys) {
+    // Allow things like "reload mt,md Arq/movement.moveToward,moveDirection"
+    var varParts = varName.split('.'), fileParts = fileAndKeys.split('.'),
+        base = varParts.slice(0, -1).join('.'), vars = varParts.getLast().split(','),
+        file = (fileParts.length > 1 ? fileParts.slice(0, -1) : fileParts).join('.'),
+        keys = fileParts.length > 1 ? fileParts.getLast().split(',') : null, object;
+
+    delete require.cache[file];
+    object = require(file);
+
+    if (!keys)
+	Object.set(global, base + '.' + vars.getLast(), object);
+    else {
+	vars.each(function (variable, index) {
+	    Object.set(global, base + '.' + variable, require(file)[keys[index]]);
+	});
+    }
+});
