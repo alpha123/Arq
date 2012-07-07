@@ -12,8 +12,17 @@ function varString() {
 }
 exports.varString = varString;
 
+function value(val) {
+    var key = varString();
+    Object.set(global, key, val);
+    return [val, key];
+}
+exports.value = value;
+
 exports.object = function () {
-    var object = {}, key = varString();
-    Object.set(global, key, object);
-    return [object, key];
+    return value({});
+};
+
+exports.array = function () {
+    return value([]);
 };
