@@ -72,7 +72,7 @@ function startBattle(attacker) {
     KeyHooks.space.add(boundUseWeapon);
 }
 
-function execute(battleData, attacker) {
+function execute(battleData, attacker, name) {
     attacker.movementPaused = true;
 
     if (!activeBattle)
@@ -80,8 +80,11 @@ function execute(battleData, attacker) {
     else
 	activeBattle.addMonsters(attacker.monsterInstance);
 
+   attacker.monsterInstance.ai.start(name, activeBattle);
+
     activeBattle.addEvent('finish', function () {
 	delete attacker.movementPaused;
+	attacker.monsterInstance.ai.stop();
     });
 }
 
@@ -110,7 +113,7 @@ exports.init = function () {
 		    map[person].touch.add(function () {
 			if (!map[person].monsterInstance) {
 			    map[person].monsterInstance = monsters[map[person].monster].clone();
-			    execute(data, map[person]);
+			    execute(data, map[person], person);
 			}
 		    });
 		}
