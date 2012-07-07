@@ -169,6 +169,16 @@ console.addCommand('Mix', "Remixes a person's spriteset", 'mix personName', func
     mixSprite(Party[person.toLowerCase().capitalize()]);
 });
 
+console.addCommand('Hud', 'Toggles the HUD', 'hud [on|off]', function (state) {
+    var hud = Arq.getModule('battle-system').hud;
+    if (hud) {
+	if ([!toBool(state), hud.isShown].pick())
+	    hud.hide();
+	else
+	    hud.show();
+    }
+});
+
 console.addCommand('Input', 'Toggles console input', 'input [on|off]', function (state) {
     console.hasInput = [toBool(state), !console.hasInput].pick();
 });
