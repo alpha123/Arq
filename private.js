@@ -7,6 +7,13 @@ function uid() {
 }
 exports.uid = uid;
 
-exports.varString = function () {
+function varString() {
     return 'Arq.__private._p' + uid();
+}
+exports.varString = varString;
+
+exports.object = function () {
+    var object = {};
+    Object.set(global, varString(), object);
+    return object;
 };
