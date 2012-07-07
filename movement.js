@@ -1,6 +1,6 @@
 // Original credit to Flikky
 
-var hasOwn = Object.prototype.hasOwnProperty;
+var hasOwn = Object.prototype.hasOwnProperty, private_ = require('Arq/private'), [callbacks, callbacksKey] = private_.array();
 
 function canMoveDirection(person, direction, tiles) {
     return canMove(person, global['COMMAND_MOVE_' + direction.toUpperCase()], tiles);
@@ -34,21 +34,20 @@ function moveDirection(person, direction, tiles, immediate, callback) {
 */
 function move(people, command, tiles, immediate, callback) {
     var faceDirection = command - (8 + (10 - command)),  // Turns COMMAND_MOVE_dir into COMMAND_FACE_dir
-        distance = (command % 2 ? GetTileWidth() : GetTileHeight()) * tiles;
+        distance = (command % 2 ? GetTileWidth() : GetTileHeight()) * tiles, callbackId;
     // `command % 2` would be true for COMMAND_MOVE_EAST (11) and COMMAND_MOVE_WEST (13)
+
+    if (callback)
+	callbacks[callbackId = private_.uid()] = callback;
 
     Array.from(people).each(function (personRegex) {
 	Arq.peopleMatching(personRegex).each(function (person) {
 	    if (command != COMMAND_WAIT)
 		QueuePersonCommand(person, faceDirection, immediate);
 	    distance.times(QueuePersonCommand.pass([person, command, false]));
-	    if (callback) {
-		// Kinda hacky, but gets the job done.
-		Arq.person(person).generator.add(function () {
-		    callback();
-		    return true;
-		}, 9);
-	    }
+
+	    if (callback)
+		QueuePersonScript(person, callbacksKey + '[' + callbackId + ']()', true);
 	});
     });
 }
