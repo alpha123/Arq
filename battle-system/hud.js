@@ -9,7 +9,7 @@ white = CreateColor(255, 255, 255), transparent = CreateColor(0, 0, 0, 0),
 screenWidth = GetScreenWidth(),
 screenHeight = GetScreenHeight(),
 partySelectWidth = floor(screenWidth * 0.1),
-partySelectOffset = floor(screenHeight * 0.05);
+partySelectOffset = floor(screenHeight * 0.05),
 itemListTop = screenHeight - floor(screenHeight * 0.4),
 itemListWidth = floor(screenWidth * 0.25),
 itemListHeight = screenHeight - itemListTop,
