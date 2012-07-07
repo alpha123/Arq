@@ -13,7 +13,7 @@ function varString() {
 exports.varString = varString;
 
 exports.object = function () {
-    var object = {};
-    Object.set(global, varString(), object);
-    return object;
+    var object = {}, key = varString();
+    Object.set(global, key, object);
+    return [object, key];
 };
