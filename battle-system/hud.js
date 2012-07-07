@@ -118,6 +118,7 @@ exports.HUD = new Class({
     update: function () {
 	this.partySelect.update();
 	this.itemList.update();
+	return this;
     },
 
     render: function () {
@@ -130,6 +131,7 @@ exports.HUD = new Class({
 	    hudFont.drawText(floor(screenWidth * 0.05), itemListTop + floor(itemListHeight * 0.05), 'No items');
 	    hudFont.setColorMask(white);
 	}
+	return this;
     },
 
     show: function () {
@@ -138,6 +140,7 @@ exports.HUD = new Class({
 	    RenderHooks.add(this.boundRender, -10);
 	    this.isShown = true;
 	}
+	return this;
     },
 
     hide: function () {
@@ -146,5 +149,6 @@ exports.HUD = new Class({
 	    RenderHooks.remove(this.boundRender);
 	    this.isShown = false;
 	}
+	return this;
     }
 });
