@@ -142,6 +142,10 @@ console.addCommand('Stat', "Displays or modifies a person's stats", 'stat person
 	return person[stat].current + '/' + person[stat].max;
 });
 
+console.addCommand('Item', 'Gives a person a new item', 'item personName itemName [amount]', function (person, item, amount) {
+    Party[person.capitalize()].items.add(Item.all[item.split('-').join(' ').capitalize()], +amount || 1);
+});
+
 console.addCommand('Items', "Lists a person's items, or all items", 'items [searchTerm] [personName]', function (search, person) {
     search = RegExp(search || '', 'i');
     var items = Object.values(person ? Party[person.toLowerCase().capitalize()].items.all : Item.all)
