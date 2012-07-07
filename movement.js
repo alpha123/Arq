@@ -32,21 +32,25 @@ function moveDirection(person, direction, tiles, immediate, callback) {
 /**
    Moves a person a given number of tiles in a given direction.
 */
-function move(person, command, tiles, immediate, callback) {
+function move(people, command, tiles, immediate, callback) {
     var faceDirection = command - (8 + (10 - command)),  // Turns COMMAND_MOVE_dir into COMMAND_FACE_dir
         distance = (command % 2 ? GetTileWidth() : GetTileHeight()) * tiles;
     // `command % 2` would be true for COMMAND_MOVE_EAST (11) and COMMAND_MOVE_WEST (13)
 
-    if (command != COMMAND_WAIT)
-	QueuePersonCommand(person, faceDirection, immediate);
-    distance.times(QueuePersonCommand.pass([person, command, false]));
-    if (callback) {
-	// Kinda hacky, but gets the job done.
-	Arq.person(person).generator.add(function () {
-	    callback();
-	    return true;
-	}, 9);
-    }
+    Array.from(people).each(function (personRegex) {
+	Arq.peopleMatching(personRegex).each(function (person) {
+	    if (command != COMMAND_WAIT)
+		QueuePersonCommand(person, faceDirection, immediate);
+	    distance.times(QueuePersonCommand.pass([person, command, false]));
+	    if (callback) {
+		// Kinda hacky, but gets the job done.
+		Arq.person(person).generator.add(function () {
+		    callback();
+		    return true;
+		}, 9);
+	    }
+	});
+    });
 }
 
 /**
