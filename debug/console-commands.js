@@ -1,5 +1,5 @@
 var console = require('Arq/debug/console'), {Quest, finish} = require('Arq/modules/quest'),
-Party = require('Arq/modules/party').PartyMember.all, {mixSprite} = require('Arq/modules/party-view');
+Party = require('Arq/modules/party').PartyMember.all, {mixSprite} = require('Arq/modules/party-view'), {Item} = require('Arq/battle-system/item');
 
 function toBool(str) {
     if (str == null)
@@ -30,7 +30,7 @@ console.addCommand('Quests', 'Lists all quests', 'quests [searchTerm]', function
 
 console.addCommand('Ghost', 'Toggles ignoring tile obstructions', 'ghost [on|off]', function (mode) {
     mode = toBool(mode);
-    var player = Arq.config.player;
+    var player = Lithonite.GIP;
     IgnoreTileObstructions(player, [mode, !IsIgnoringTileObstructions(player)].pick());
     IgnorePersonObstructions(player, [mode, !IsIgnoringPersonObstructions(player)].pick());
 });
@@ -140,6 +140,25 @@ console.addCommand('Stat', "Displays or modifies a person's stats", 'stat person
     }
     else
 	return person[stat].current + '/' + person[stat].max;
+});
+
+console.addCommand('Items', "Lists a person's items, or all items", 'items [searchTerm] [personName]', function (search, person) {
+    search = RegExp(search || '', 'i');
+    var items = Object.values(person ? Party[person.toLowerCase().capitalize()].items.all : Item.all)
+	.filter(function (i) search.test((i.item ? i.item.name : i.name).toLowerCase().split(' ').join('-').hyphenate()))
+        .map(function (i) {
+            if (i.item) i = i.item;
+
+            var belongs = '';
+            Object.each(Party, function (member) {
+                Object.each(member.items.all, function (item) {
+                    if (item.item.name == i.name)
+                        belongs += ' (' + member.name + ' ' + item.amount + ')';
+                });
+            });
+            return i.name.toLowerCase().split(' ').join('-').hyphenate() + belongs;
+        });
+    return items.length ? items : 'no items matching "' + search.source + (person ? '" belonging to ' + person.capitalize() : '"');
 });
 
 console.addCommand('Mix', "Remixes a person's spriteset", 'mix personName', function (person) {
