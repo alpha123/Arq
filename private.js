@@ -1,6 +1,6 @@
 var id = 0;
 
-Arq.__private = {};
+global.__arqprivate = {};
 
 function uid() {
     return ++id;
@@ -8,7 +8,7 @@ function uid() {
 exports.uid = uid;
 
 function varString() {
-    return 'Arq.__private._p' + uid();
+    return '__arqprivate._p' + uid();
 }
 exports.varString = varString;
 
