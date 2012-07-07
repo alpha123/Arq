@@ -21,6 +21,8 @@ exports.hudColor = hudColor;
 exports.HUD = new Class({
     Implements: Events,
 
+    isShown: false,
+
     initialize: function (party) {
 	this.boundUpdate = this.update.bind(this);
 	this.boundRender = this.render.bind(this);
@@ -131,12 +133,18 @@ exports.HUD = new Class({
     },
 
     show: function () {
-	UpdateHooks.add(this.boundUpdate);
-	RenderHooks.add(this.boundRender, -10);
+	if (!this.isShown) {
+	    UpdateHooks.add(this.boundUpdate);
+	    RenderHooks.add(this.boundRender, -10);
+	    this.isShown = true;
+	}
     },
 
     hide: function () {
-	UpdateHooks.remove(this.boundUpdate);
-	RenderHooks.remove(this.boundRender);
+	if (this.isShown) {
+	    UpdateHooks.remove(this.boundUpdate);
+	    RenderHooks.remove(this.boundRender);
+	    this.isShown = false;
+	}
     }
 });
