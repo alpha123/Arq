@@ -1,4 +1,4 @@
-var HookList = require('hook-list').HookList;
+var HookList = require('hook-list').HookList,
 keys =
 // Yeah, I typed all these in manually.
 ['escape', 'f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9', 'f10', 'f11',
