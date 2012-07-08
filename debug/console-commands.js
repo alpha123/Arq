@@ -179,6 +179,10 @@ console.addCommand('Hud', 'Toggles the HUD', 'hud [on|off]', function (state) {
     }
 });
 
+console.addCommand('Monsters', 'Lists monsters currently in battle', 'monsters [true|false]', function (all) {
+    return Arq.getModule('battle-system').activeBattle[toBool(all) ? 'allMonsters' : 'monsters'].map(function (m) m.name);
+});
+
 console.addCommand('Input', 'Toggles console input', 'input [on|off]', function (state) {
     console.hasInput = [toBool(state), !console.hasInput].pick();
 });
