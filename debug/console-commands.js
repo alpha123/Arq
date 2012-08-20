@@ -157,7 +157,10 @@ console.addCommand('Purge', 'Purges the CommonJS cache', 'purge [file]', functio
 	require.cache = {};
 });
 
-console.addCommand('Reload', 'Reloads a CommonJS module', 'reload variable file', function (varName, fileAndKeys) {
+console.addCommand('Reload', 'Reloads a CommonJS module', 'reload variable file', function reload(varName, fileAndKeys) {
+    if (!varName && reload.lastVarName) varName = reload.lastVarName;
+    if (!fileAndKeys && reload.lastFileAndKeys) fileAndKeys = reload.lastFileAndKeys;
+
     // Allow things like "reload mt,md Arq/movement.moveToward,moveDirection"
     var varParts = varName.split('.'), fileParts = fileAndKeys.split('.'),
         base = varParts.slice(0, -1).join('.'), vars = varParts.getLast().split(','),
@@ -174,4 +177,7 @@ console.addCommand('Reload', 'Reloads a CommonJS module', 'reload variable file'
 	    Object.set(global, base + '.' + variable, require(file)[keys[index]]);
 	});
     }
+
+    reload.lastVarName = varName;
+    reload.lastFileAndKeys = fileAndKeys;
 });
