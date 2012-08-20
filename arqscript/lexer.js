@@ -66,8 +66,8 @@ exports.tokenizer = function (string, prefix, suffix) {
 	else if (current >= '0' && current <= '9') {
 	    str = current;
 	    advance();
-	    while (current && /[0-9,]/.test(current)) {
-		if (current != ',')
+	    while (current && /[0-9_]/.test(current)) {
+		if (current != '_')
 		    str += current;
 		advance();
 	    }
