@@ -61,7 +61,7 @@ exports.tokenizer = function (string, prefix, suffix) {
 		str += current;
 		advance();
 	    }
-	    yield(token('identifier', str.toUpperCase()));  // Case-insensitive
+	    yield(token('identifier', str));
 	}
 	else if (current >= '0' && current <= '9') {
 	    str = current;
