@@ -7,6 +7,10 @@ function toBool(str) {
     return str === 'true' || str === 'on' || str === 'yes';
 }
 
+function toCode(args) {
+    return [].join.call(args, ' ').replace(/\\n/g, '\n');
+}
+
 console.addCommand('Map', 'Changes to a specified map', 'map [mapName]', function (map) {
     if (map)
 	Arq.goTo(map);
@@ -180,4 +184,29 @@ console.addCommand('Reload', 'Reloads a CommonJS module', 'reload variable file'
 
     reload.lastVarName = varName;
     reload.lastFileAndKeys = fileAndKeys;
+});
+
+console.addCommand('arqscriptlex', 'Converts a string into ArqScript tokens', 'arqscriptlex code...',
+function () {
+    var {tokenizer} = require('Arq/arqscript/lexer'), tokens = tokenizer(toCode(arguments)), token;
+    for (token in tokens)
+	console.info(token.toSource());
+});
+
+console.addCommand('arqscriptparse', 'Parses ArqScript code into an AST', 'arqscriptparse code...',
+function () {
+    var {tokenizer} = require('Arq/arqscript/lexer'), {parser} = require('Arq/arqscript/parser'),
+        parse = parser(tokenizer(toCode(arguments)));
+    return parse().toSource().replace(/:/g, ': ').replace(/,/g, ',\n').split('\n');
+});
+
+function arqScriptCompile() {
+    var {tokenizer} = require('Arq/arqscript/lexer'), {parser} = require('Arq/arqscript/parser'),
+        {compiler} = require('Arq/arqscript/compiler');
+    return compiler(parser(tokenizer(toCode(arguments)))(), {bare: true})().split('\n');
+}
+console.addCommand('arqscriptcompile', 'Compiles ArqScript into JavaScript', 'arqscriptcompile code...', arqScriptCompile);
+
+console.addCommand('arqscripteval', 'Evaluates ArqScript code', 'arqscripteval code...', function () {
+    return eval(arqScriptCompile.apply(this, arguments).join('\n'));
 });
