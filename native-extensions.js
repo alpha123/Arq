@@ -23,6 +23,15 @@ String.implement('each', function (fn) {
     return this;
 });
 
+// See http://stackoverflow.com/questions/8588449/node-js-how-many-bits-in-a-string
+String.implement('sizeInBytes', function () {
+    return this.split('').map(function (c) c.charCodeAt(0)).reduce(function (bytes, c) {
+	if (c <= 0x007f) return bytes + 1;
+	else if (c <= 0x07ff || (c >= 0xd800 && c <= 0xdfff)) return bytes + 2;
+	else return bytes + 3;
+    }, 0);
+});
+
 // Taken verbatim from MooTools More
 var conversions = {	
     ms: 1,
