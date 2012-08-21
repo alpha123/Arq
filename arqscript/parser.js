@@ -318,20 +318,9 @@ exports.parser = function (tokens) {
 
     infix('(', 80, function (left) {
 	var args = [];
-	if (left.id == '.' || left.id == '[') {
-	    this.arity = 'ternary';
-	    this.first = left.first;
-	    this.second = left.second;
-	    this.third = args;
-	}
-	else {
-	    this.arity = 'binary';
-	    this.first = left;
-	    this.second = args;
-	    if ((left.arity != 'unary' || left.id != 'function') && left.arity != 'name' &&
-		left.id != '(' && left.id != 'and' && left.id != 'or')
-		throw new Error('Expected a variable name at line ' + left.line);
-	}
+	this.arity = 'binary';
+	this.first = left;
+	this.second = args;
 	if (token.id != ')') {
 	    while (true) {
 		args.push(expression(0));
