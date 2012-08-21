@@ -18,6 +18,11 @@ String.implement('reverse', function () {
     return this.split('').reverse().join('');
 });
 
+String.implement('each', function (fn) {
+    this.split('').each(fn);
+    return this;
+});
+
 // Taken verbatim from MooTools More
 var conversions = {	
     ms: 1,
