@@ -278,7 +278,24 @@ addCommand('Help', 'Lists all commands or info for a particular command', 'help 
     }
     return cmds;
 });
+
 addCommand('Clear', 'Clears console', 'clear', function () {
     lines = [];
     return false;
+});
+
+addCommand('Dump', 'Dumps console output to a file', 'dump [file]', function (filename) {
+    filename = filename || 'console_dump.txt';
+    filename = filename.startsWith('~/') ? filename : '~/other/' + filename;
+    var dump = lines.map(function (l) l.text).join('\n'), file = OpenRawFile(filename, true);
+    try {
+	file.write(CreateByteArrayFromString(dump));
+    }
+    catch (e) {
+	return 'Couldn\'t dump to "' + filename + '": ' + e;
+    }
+    finally {
+	file.close();
+    }
+    return 'Wrote ~' + (dump.sizeInBytes() / 1000).toFixed(2) + 'kb to "' + filename + '"';
 });
