@@ -1,8 +1,7 @@
-var hasOwn = Object.prototype.hasOwnProperty,
-{tokenizer} = require('Arq/arqscript/lexer');
+var hasOwn = Object.prototype.hasOwnProperty;
 
-exports.parser = function (code) {
-    var tokens, token,
+exports.parser = function (tokens) {
+    var token,
     symbols = {},
     Symbol = {
 	id: '',
@@ -296,6 +295,7 @@ exports.parser = function (code) {
     infix('+', 50);
     infix('-', 50);
     infix('*', 60);
+    infix('/', 60);
 
     infix('.', 80, function (left) {
 	this.first = left;
@@ -440,7 +440,6 @@ exports.parser = function (code) {
     });
 
     return function () {
-	tokens = tokenizer(code);
 	newScope();
 	advance();
 	var ast = statements();
