@@ -54,7 +54,7 @@ exports.tokenizer = function (string, prefix, suffix) {
 	}
 	else if (current <= ' ')
 	    advance();
-	else if (/[a-zA-Z$]/.test(current)) {
+	else if (/[a-zA-Z_$]/.test(current)) {
 	    str = current;
 	    advance();
 	    while (current && /[a-zA-Z0-9\-_$?!]/.test(current)) {
