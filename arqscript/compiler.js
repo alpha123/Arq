@@ -11,7 +11,10 @@ function escapeName(name) {
 }
 
 function nameGet(context, name) {
-    // Do magic for case-insensitivity.
+    // Do magic for case-insensitivity. Basically iterate through all keys of the context until
+    // one is found that equals the target key, ignoring case.
+    // Also, if the target key is a number, subtract 1, since ArqScript arrays are 1-based
+    // and JavaScript arrays are 0-based.
     return '(function (__ref$, __name$, __key$) {\n' +
 	   '    if (typeof __name$ == "number" && isFinite(__name$))\n' +
 	   '        return __ref$[__name$ - 1];\n' +  // Array indices start from 1, not 0
@@ -60,6 +63,25 @@ exports.compiler = function (ast, options) {
 	not: '!'
     },
     statements = {
+	for: function (node) {
+	    if (hasOwn.call(statements, 'for' + node.first.value))
+		return statements['for' + node.first.value].apply(this, arguments);
+	    throw new Error('"for" statement without "in" or "of" at line ' + node.line);
+	},
+	forin: function (node) {
+	    return indent(function () {
+		vars[node.first.first.value] = true;
+		var varName = $(node.first.first),
+		    code = '(function (__ref$, __index$, ' + varName + ') {\n' +
+		    _() + 'for (; ' + varName + ' = __ref$[__index$], __index$ < __ref$.length; ++__index$) {\n' +
+		           indent(function () $$(node.second)) + _() + '}\n' +
+		    _(-4) + '})(' + $(node.first.second) + ', 0)';
+		delete vars[node.first.first.value];
+		return code;
+	    });
+	},
+	forof: function (node) {
+	},
 	function: function (node) {
 	    return compilers.assignment(node, compilers.lambda({first: node.second, second: node.third}));
 	},

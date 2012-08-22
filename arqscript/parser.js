@@ -258,7 +258,6 @@ exports.parser = function (tokens) {
     symbol('end').terminates = true;
     symbol('else').terminates = true;
     symbol('then');
-    symbol('in');
 
     constant('true', true);
     constant('false', false);
@@ -307,6 +306,8 @@ exports.parser = function (tokens) {
     infix('-', 50);
     infix('*', 60);
     infix('/', 60);
+    infix('in', 70);
+    infix('of', 70);
 
     infix('.', 80, function (left) {
 	this.first = left;
@@ -431,9 +432,7 @@ exports.parser = function (tokens) {
 
     stmt('for', function () {
 	this.first = expression(0);
-	advance('in');
-	this.second = expression(0);
-	this.third = block('do');
+	this.second = block('do');
 	this.arity = 'statement';
 	advance('end');
 	return this;
