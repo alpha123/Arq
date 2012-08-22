@@ -369,19 +369,18 @@ exports.parser = function (tokens) {
     });
 
     stmt('function', function () {
-	var params = [];
+	var params = [], sig;
 	newScope();
-	if (token.arity != 'name')
+	if (token.arity != 'name' || (token.arity == 'binary' && !['.', '['].contains(token.value)))
 	    throw new Error('Expected a function name at line ' + token.line);
-	scope.define(token);
-	this.name = token.value;
-	advance();
-	advance('(');
-	if (token.id != ')')
-	    params = parameterList();
-	this.first = params;
-	advance(')');
-	this.second = statements();
+
+	if (token.arity == 'name')
+	    scope.define(token);
+
+	sig = expression(0);
+	this.first = sig.first;
+	this.second = sig.second;
+	this.third = statements();
 	advance('end');
 	this.arity = 'statement';
 	scope.pop();
