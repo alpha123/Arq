@@ -110,7 +110,7 @@ exports.compiler = function (ast, options) {
 	assignment: function (node, value) {
 	    if (node.first.arity == 'name' && !(node.first.value in vars)) {
 		vars[node.first.value] = true;
-		topLevel += 'var ' + $(node.first) + ';\n';
+		topLevel += _() + 'var ' + $(node.first) + ';\n';
 	    }
 	    if (node.first.arity == 'binary' && ['.', '['].contains(node.first.value))
 		return nameSet($(node.first.first), $(node.first.second), (value == null ? $(node.second) : value));
@@ -131,15 +131,15 @@ exports.compiler = function (ast, options) {
 		return isDefault;
 	    }).reduce(function (code, param) {
 		var paramName = $(param.first);
-		return code + '\n    if (' + paramName + ' == null)\n' +
-		                '        ' + paramName + ' = ' + $(param.second) + ';';
+		return code + '\n' + _(4) + 'if (' + paramName + ' == null)\n' +
+		                _(8) + paramName + ' = ' + $(param.second) + ';';
 	    }, ''), oldTop = topLevel, oldVars = vars, args, body, code;
 	    topLevel = '';
 	    vars = Object.create(vars);
 	    code = indent(function () {
 		args = $$(node.first, ', ', false).slice(0, -2);
 		body = node.second ? '\n' + $$(node.second) : defaults.length ? '\n' : ' ';
-		return 'function (' + args + ') {' + defaults + (topLevel ? '\n' + _() + topLevel : '') + body + _(-4) + '}';
+		return 'function (' + args + ') {' + defaults + (topLevel ? '\n' + topLevel : '') + body + _(-4) + '}';
 	    });
 	    topLevel = oldTop;
 	    vars = oldVars;
