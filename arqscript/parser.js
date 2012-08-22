@@ -295,6 +295,7 @@ exports.parser = function (tokens) {
     });
 
     infixr('and', 30);
+    infixr('but', 30);
     infixr('or', 30);
     infixr('=', 40);
     infixr('/=', 40);
