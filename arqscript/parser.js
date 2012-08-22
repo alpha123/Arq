@@ -234,11 +234,12 @@ exports.parser = function (tokens) {
     function parameterList() {
 	var args = [];
 	while (true) {
-	    if (token.arity != 'name')
+	    if (token.arity != 'name' || (token.arity == 'binary' && token.value != ':'))
 		throw new Error('Expected a parameter name at line ' + token.line);
-	    scope.define(token);
-	    args.push(token);
-	    advance();
+
+	    if (token.arity == 'name')
+		scope.define(token);
+	    args.push(expression(0));
 	    if (token.id != ',') break;
 	    advance(',');
 	}
@@ -270,6 +271,15 @@ exports.parser = function (tokens) {
     };
 
     assignment(':=');
+
+    infix(':', 10, function (left) {
+	if (left.arity != 'name')
+	    throw new Error('Expected a name at line ' + left.line);
+	this.first = left;
+	this.second = expression(0);
+	this.arity = 'binary';
+	return this;
+    });
 
     infix('if', 20, function (left) {
 	this.first = expression(0);
@@ -352,6 +362,7 @@ exports.parser = function (tokens) {
 	}
 	this.first = params;
 	this.second = statements();
+	advance('end');
 	this.arity = 'lambda';
 	scope.pop();
 	return this;
@@ -361,7 +372,7 @@ exports.parser = function (tokens) {
 	var params = [];
 	newScope();
 	if (token.arity != 'name')
-	    throw new Error('Expected function name at line ' + token.line);
+	    throw new Error('Expected a function name at line ' + token.line);
 	scope.define(token);
 	this.name = token.value;
 	advance();
