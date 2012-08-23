@@ -97,12 +97,22 @@ Function.implement('chain', function (next) {
 });
 
 
-Array.implement('find', function (fn) {
-    return this.filter(fn)[0];
+Array.implement('find', function (fn, thisObject) {
+    return this.filter(fn, thisObject)[0];
 });
 
 Array.implement('pluck', function (key) {
     return this.map(function (thing) Object.get(thing, key));
+});
+
+Array.implement('partition', function (fn, thisObject) {
+    for (var trueArray = [], falseArray = [], i = 0, l = this.length; i < l; ++i) {
+	if (fn.call(thisObject, this[i], i))
+	    trueArray.push(this[i]);
+	else
+	    falseArray.push(this[i]);
+    }
+    return [trueArray, falseArray];
 });
 
 

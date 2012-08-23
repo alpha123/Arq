@@ -1,4 +1,5 @@
-var hasOwn = Object.prototype.hasOwnProperty;
+var hasOwn = Object.prototype.hasOwnProperty, slice = Array.prototype.slice,
+helpers = require('Arq/arqscript/helpers');
 
 function val(object, default_) {
     return hasOwn.call(object, default_) ? object[default_] : default_;
@@ -43,7 +44,7 @@ exports.compiler = function (ast, options) {
 
     var header = options.bare ? '' : '(function (global, undefined) {\n\n',
         footer = options.bare ? '' : '\n\n})(this);',
-        vars = {}, topLevel = '', indentLevel = 0,
+        vars = {}, topLevel = '', indentLevel = 0, addedHelpers = {},
     binOps = {
 	and: '&&',
 	but: '&&',
@@ -51,7 +52,19 @@ exports.compiler = function (ast, options) {
 	'=': '===',
 	'/=': '!==',
 	'(': function (node) {
-	    return $(node.first) + '(' + $$(node.second, ', ', false).slice(0, -2) + ')';
+	    var [kwargs, args] = node.second.partition(function (a) a.arity == 'binary'), kwcode;
+	    if (kwargs.length) {
+		if (!hasOwn.call(addedHelpers, 'keywordargs')) {
+		    addedHelpers.keywordargs = true;
+		    footer = '\n\n' + helpers.keywordargs + footer;
+		}
+		kwcode = kwargs.reduce(function (code, arg) {
+		    return code + ', "' + escapeName(arg.first.value) + '": ' + $(arg.second);
+		}, '').slice(2);
+		return '__keywordargs$(' + $(node.first) + ')([' + $$(args, ', ', false).slice(0, -2) +
+		                                             '], {' + kwcode + '})';
+	    }
+	    return $(node.first) + '(' + $$(args, ', ', false).slice(0, -2) + ')';
 	},
 	'.': function (node) {
 	    return nameGet($(node.first), $(node.second));
@@ -197,8 +210,9 @@ exports.compiler = function (ast, options) {
     function compileNodes(ast, separator, indent) {
 	if (separator == null) separator = ';\n';
 	if (indent == null) indent = true;
+	var self = this, args = slice.call(arguments, 3);
 	return Array.from(ast).reduce(function (code, node) {
-	    return code + (indent ? _() : '') + compileNode(node) + separator;
+	    return code + (indent ? _() : '') + compileNode.apply(self, [node].concat(args)) + separator;
 	}, '');
     }
     $$ = compileNodes;
