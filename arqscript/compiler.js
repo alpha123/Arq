@@ -51,6 +51,8 @@ exports.compiler = function (ast, options) {
 	or: '||',
 	'=': '===',
 	'/=': '!==',
+	in: function (node) $(node.second) + '.contains(' + $(node.first) + ')',
+	of: function (node) $(node.first) + ' in ' + $(node.second),
 	'(': function (node) {
 	    var [kwargs, args] = node.second.partition(function (a) a.arity == 'binary'), kwcode;
 	    if (kwargs.length) {
