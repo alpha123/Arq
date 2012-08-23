@@ -42,8 +42,8 @@ function nameSet(context, name, value) {
 exports.compiler = function (ast, options) {
     options = options || {};
 
-    var header = options.bare ? '' : '(function (global, undefined) {\n\n',
-        footer = options.bare ? '' : '\n\n})(this);',
+    var header = options.bare ? '' : '(function (global, isFinite, undefined) {\n\n',
+        footer = options.bare ? '' : '\n\n})(this, isFinite);',
         vars = {}, topLevel = '', indentLevel = 0, addedHelpers = {},
     binOps = {
 	and: '&&',
