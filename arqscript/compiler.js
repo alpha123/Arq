@@ -57,7 +57,7 @@ exports.compiler = function (ast, options) {
 	    return nameGet($(node.first), $(node.second));
 	},
 	'[': function () binOps['.'].apply(this, arguments),
-	':': function (node) { throw new Error('":" outside of function call or definition at line ' + node.line); },
+	':': function (node) { throw new Error('":" outside of function call or definition at line ' + node.line); }
     },
     unOps = {
 	not: '!'
@@ -81,6 +81,16 @@ exports.compiler = function (ast, options) {
 	    });
 	},
 	forof: function (node) {
+	    return indent(function () {
+		vars[node.first.first.value] = true;
+		var varName = $(node.first.first),
+		    code = '(function (__ref$, __key$, ' + varName + ') {\n' +
+		    _() + 'for (__key$ in __ref$) {\n' + _(4) + varName + ' = __ref$[__key$];\n' +
+		          indent(function () $$(node.second)) + _() + '}\n' +
+		    _(-4) + '})(' + $(node.first.second) + ')';
+		delete vars[node.first.first.value];
+		return code;
+	    });
 	},
 	function: function (node) {
 	    return compilers.assignment(node, compilers.lambda({first: node.second, second: node.third}));
@@ -157,6 +167,7 @@ exports.compiler = function (ast, options) {
 
     function _(diff) {
 	if (diff == null) diff = 0;
+	diff = diff.max(0);
 	return Array(indentLevel + diff).join(' ');
     }
 
