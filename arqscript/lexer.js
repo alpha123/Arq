@@ -11,7 +11,7 @@
 
 var hasYield = (function () {
     try {
-	eval('yield = 42');
+	eval('var yield = 42;');
 	return false;
     }
     catch (e) {
