@@ -431,8 +431,17 @@ exports.parser = function (tokens) {
     });
 
     stmt('for', function () {
-	this.first = expression(0);
-	this.second = block('do');
+	this.first = token;
+	advance();
+	if (token.id == ',') {
+	    advance();
+	    this.first = [this.first, token];
+	    advance();
+	}
+	this.type = token.value;
+	advance();
+	this.second = expression(0);
+	this.third = block('do');
 	this.arity = 'statement';
 	advance('end');
 	return this;

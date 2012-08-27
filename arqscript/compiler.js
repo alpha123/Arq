@@ -79,31 +79,57 @@ exports.compiler = function (ast, options) {
     },
     statements = {
 	for: function (node) {
-	    if (hasOwn.call(statements, 'for' + node.first.value))
-		return statements['for' + node.first.value].apply(this, arguments);
-	    throw new Error('"for" statement without "in" or "of" at line ' + node.line);
+	    if (hasOwn.call(statements, 'for' + node.type))
+		return statements['for' + node.type].apply(this, arguments);
+	    throw new Error('Invalid "for" statement at line ' + node.line);
 	},
 	forin: function (node) {
 	    return indent(function () {
-		vars[node.first.first.value] = true;
-		var varName = $(node.first.first),
-		    code = '(function (__ref$, __index$, ' + varName + ') {\n' +
-		    _() + 'for (; ' + varName + ' = __ref$[__index$], __index$ < __ref$.length; ++__index$) {\n' +
-		           indent(function () $$(node.second)) + _() + '}\n' +
-		    _(-4) + '})(' + $(node.first.second) + ', 0)';
-		delete vars[node.first.first.value];
+		if (typeOf(node.first) != 'array')
+		    node.first = [node.first, {value: '__index$'}];
+		else
+		    vars[node.first[1].value] = true;
+		vars[node.first[0].value] = true;
+
+		var valueName = escapeName(node.first[0].value), indexName = escapeName(node.first[1].value),
+		    code = '(function (__ref$, ' + indexName + ', ' + valueName + ') {\n' +
+		     _() + 'for (; ' + valueName + ' = __ref$[' + indexName + ' - 1], ' + indexName + ' <= __ref$.length; ++' + indexName + ') {\n' +
+		           indent(function () $$(node.third)) + _() + '}\n' +
+		   _(-4) + '})(' + $(node.second) + ', 1)';
+
+		delete vars[node.first[0].value];
+		if (hasOwn.call(node.first[1], 'id'))  // Determine if we have a "real" variable name or __index$
+		    delete vars[node.first[1].value];
+
 		return code;
 	    });
 	},
 	forof: function (node) {
 	    return indent(function () {
-		vars[node.first.first.value] = true;
-		var varName = $(node.first.first),
-		    code = '(function (__ref$, __key$, ' + varName + ') {\n' +
-		    _() + 'for (__key$ in __ref$) {\n' + _(4) + varName + ' = __ref$[__key$];\n' +
-		          indent(function () $$(node.second)) + _() + '}\n' +
-		    _(-4) + '})(' + $(node.first.second) + ')';
-		delete vars[node.first.first.value];
+		var keyName, valueName, code;
+		if (typeOf(node.first) == 'array') {
+		    vars[node.first[0].value] = vars[node.first[1].value] = true;
+		    keyName = escapeName(node.first[0].value);
+		    valueName = escapeName(node.first[1].value);
+		}
+		else {
+		    vars[node.first.value] = true;
+		    keyName = escapeName(node.first.value);
+		}
+
+		code = '(function (__ref$, ' + keyName + (valueName ? ', ' + valueName : '') + ') {\n' +
+		 _() + 'for (' + keyName + ' in __ref$) {\n' +
+		       (valueName ? _(4) + valueName + ' = __ref$[' + keyName + '];\n' : '') +
+		       indent(function () $$(node.third)) + _() + '}\n' +
+	       _(-4) + '})(' + $(node.second) + ')';
+
+		if (valueName) {
+		    delete vars[node.first[0].value];
+		    delete vars[node.first[1].value];
+		}
+		else
+		    delete vars[node.first.value];
+
 		return code;
 	    });
 	},
