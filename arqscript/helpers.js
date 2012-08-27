@@ -1,5 +1,12 @@
 // Helper functions for ArqScript
 
+exports.bind =
+'function __bind$(fn, target) {\n\
+    return function () {\n\
+        return fn.apply(target, arguments);\n\
+    };\n\
+}';
+
 exports.keywordargs =
 'function __keywordargs$(fn) {\n\
     var source = "" + fn,\n\

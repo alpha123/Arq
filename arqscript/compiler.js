@@ -11,34 +11,6 @@ function escapeName(name) {
     return name.replace(/-/g, '').replace(/\?/g, '$__question__$').replace(/!/g, '$__exclamation__$');
 }
 
-function nameGet(context, name) {
-    // Do magic for case-insensitivity. Basically iterate through all keys of the context until
-    // one is found that equals the target key, ignoring case.
-    // Also, if the target key is a number, subtract 1, since ArqScript arrays are 1-based
-    // and JavaScript arrays are 0-based.
-    return '(function (__ref$, __name$, __key$) {\n' +
-	   '    if (typeof __name$ == "number" && isFinite(__name$))\n' +
-	   '        return __ref$[__name$ - 1];\n' +  // Array indices start from 1, not 0
-	   '    for (__key$ in __ref$) {\n' +
-	   '        if (__key$.toLowerCase() === __name$)\n' +
-	   '            return __ref$[__key$];\n' +
-	   '    }\n' +
-	   '})(' + context + ', ' + name + ')';
-}
-
-function nameSet(context, name, value) {
-    // Really, I firmly believe in case-insensitivity.
-    return '(function (__ref$, __name$, __value$, __key$) {\n' +
-	   '    if (typeof __name$ == "number" && isFinite(__name$))\n' +
-	   '        return __ref$[__name$ - 1] = __value$;\n' +
-	   '    for (__key$ in __ref$) {\n' +
-	   '        if (__key$.toLowerCase() === __name$)\n' +
-	   '            return __ref$[__key$] = __value$;\n' +
-	   '    }\n' +
-	   '    return __ref$[__name$] = __value$;\n' +
-	   '})(' + context + ', ' + name + ', ' + value + ')';
-}
-
 exports.compiler = function (ast, options) {
     options = options || {};
 
@@ -227,6 +199,45 @@ exports.compiler = function (ast, options) {
 	var code = block();
 	indentLevel -= level;
 	return code;
+    }
+
+    function nameGet(context, name) {
+	if (!hasOwn.call(addedHelpers, 'bind')) {
+	    addedHelpers.bind == true;
+	    footer = '\n\n' + helpers.bind + footer;
+	}
+
+	// Do magic for case-insensitivity. Basically iterate through all keys of the context until
+	// one is found that equals the target key, ignoring case.
+	// Also, if the target key is a number, subtract 1, since ArqScript arrays are 1-based
+	// and JavaScript arrays are 0-based.
+	return '(function (__ref$, __name$, __key$) {\n' +
+	    '    if (typeof __name$ == "number" && isFinite(__name$))\n' +
+	    '        return __bind$(__ref$[__name$ - 1], __ref$);\n' +  // Array indices start from 1, not 0
+	    '    if (__name$ in __ref$)\n' +
+	    '        return __bind$(__ref$[__name$], __ref$);\n' +
+	    '    for (__key$ in __ref$) {\n' +
+	    '        if (__key$.toLowerCase() === __name$)\n' +
+	    '            return __bind$(__ref$[__key$], __ref$);\n' +
+	    '    }\n' +
+	    // Do some ugly stuff to access methods like hasOwnProperty which aren't enumerable and therefore
+	    // don't get searched through above. See https://github.com/alpha123/Arq/issues/4
+	    '    if ((__name$ = __name$.replace(/_([a-z])/ig, function ($0, $1) $1.toUpperCase())) in __ref$)\n' +
+	    '        return __bind$(__ref$[__name$], __ref$);\n' +
+	    '})(Object(' + context + '), ' + name + ')';  // Cast to object so cases like "abc".slice(...) work.
+    }
+
+    function nameSet(context, name, value) {
+	// Really, I firmly believe in case-insensitivity.
+	return '(function (__ref$, __name$, __value$, __key$) {\n' +
+	    '    if (typeof __name$ == "number" && isFinite(__name$))\n' +
+	    '        return __ref$[__name$ - 1] = __value$;\n' +
+	    '    for (__key$ in __ref$) {\n' +
+	    '        if (__key$.toLowerCase() === __name$)\n' +
+	    '            return __ref$[__key$] = __value$;\n' +
+	    '    }\n' +
+	    '    return __ref$[__name$] = __value$;\n' +
+	    '})(' + context + ', ' + name + ', ' + value + ')';
     }
 
     function compileNode(node) {
