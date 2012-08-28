@@ -153,7 +153,7 @@ exports.parser = function (tokens) {
 	try {
 	    do {
 		tok = tokens.next();
-	    } while (tok.type == 'comment');  // Ignore comments, for now.
+	    } while (tok.type == 'comment' || (tok.type == 'operator' && tok.value == 'nl'));  // Ignore comments and newlines, for now.
 	}
 	catch (e if e instanceof StopIteration) {
 	    token = symbols['(end)'];

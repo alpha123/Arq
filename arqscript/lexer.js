@@ -50,7 +50,7 @@ exports.tokenizer = function (string, prefix, suffix) {
 	    ++line;
 	    while (current == '\n' || current == '\r')
 		advance();
-	    yield(token('operator', ';'));
+	    yield(token('operator', 'nl'));
 	}
 	else if (current <= ' ')
 	    advance();
