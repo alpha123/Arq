@@ -26,7 +26,7 @@ exports.compiler = function (ast, options) {
 	in: function (node) $(node.second) + '.contains(' + $(node.first) + ')',
 	of: function (node) $(node.first) + ' in ' + $(node.second),
 	'(': function (node) {
-	    var [kwargs, args] = node.second.partition(function (a) a.arity == 'binary'), kwcode;
+	    var [kwargs, args] = node.second.partition(function (a) a.arity == 'binary' && a.value == ':'), kwcode;
 	    if (kwargs.length) {
 		if (!hasOwn.call(addedHelpers, 'keywordargs')) {
 		    addedHelpers.keywordargs = true;
