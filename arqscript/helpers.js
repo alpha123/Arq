@@ -2,6 +2,8 @@
 
 exports.bind =
 'function __bind$(fn, target) {\n\
+    if (typeof fn != "function")\n\
+        return fn;\n\
     return function () {\n\
         return fn.apply(target, arguments);\n\
     };\n\
