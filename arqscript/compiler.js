@@ -142,7 +142,7 @@ exports.compiler = function (ast, options) {
 	    return $(node.first) + ' = ' + (value == null ? $(node.second) : value);
 	},
 	binary: function (node) {
-	    if (!hasOwn.call(binOps, node.value) || typeof val(node.value) == 'string')
+	    if (!hasOwn.call(binOps, node.value) || typeof val(binOps, node.value) == 'string')
 		return $(node.first) + ' ' + val(binOps, node.value) + ' ' + $(node.second);
 	    return binOps[node.value].apply(this, arguments);
 	},
