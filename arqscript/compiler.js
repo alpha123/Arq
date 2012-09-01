@@ -23,6 +23,8 @@ exports.compiler = function (ast, options) {
 	or: '||',
 	'=': '===',
 	'/=': '!==',
+	'<': compareOp('<'), '<=': compareOp('<='),
+	'>': compareOp('>'), '>=': compareOp('>='),
 	in: function (node) $(node.second) + '.contains(' + $(node.first) + ')',
 	of: function (node) $(node.first) + ' in ' + $(node.second),
 	'(': function (node) {
@@ -170,7 +172,7 @@ exports.compiler = function (ast, options) {
 	},
 	literal: function (node) typeof node.value == 'string' ? '"' + node.value + '"' : node.value,
 	name: function (node) {
-	    if (!(node.value in vars))
+	    if (!(node.value in vars) && !node.value.startsWith('__'))
 		return nameGet('global', '"' + escapeName(node.value) + '"');
 	    return escapeName(node.value);
 	},
@@ -207,6 +209,17 @@ exports.compiler = function (ast, options) {
 	    level = 4;
 	}
 	return block().split('\n').map(function (line) _() + line).join('\n');
+    }
+
+    function compareOp(op) {
+	return function (node) {
+	    if (node.second.arity == 'binary' && ['<', '>', '<=', '=>'].contains(node.second.value)) {
+		var target = node.second.first;
+		node.second.first = {arity: 'name', value: '__ref$'};
+		return '(function (__ref$) { return ' + $(node.first) + ' ' + op + ' __ref$ && ' + $(node.second) + '; })(' + $(target) + ')';
+	    }
+	    return $(node.first) + ' ' + op + ' ' + $(node.second);
+	};
     }
 
     function nameGet(context, name) {
