@@ -211,7 +211,7 @@ exports.compiler = function (ast, options) {
 
     function nameGet(context, name) {
 	if (!hasOwn.call(addedHelpers, 'bind')) {
-	    addedHelpers.bind == true;
+	    addedHelpers.bind = true;
 	    footer = '\n\n' + helpers.bind + footer;
 	}
 
