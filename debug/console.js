@@ -69,6 +69,10 @@ function addCommand(cmd, desc, usage, action) {
 }
 exports.addCommand = addCommand;
 
+exports.getCommand = function (cmd) {
+    return commands[cmd.toLowerCase()];
+};
+
 exports.init = function (fake) {
     if (fake) {
 	exports.toggle = exports.render = exports.update = exports.addCommand =
