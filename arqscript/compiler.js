@@ -124,6 +124,14 @@ exports.compiler = function (ast, options) {
 	return: function (node) {
 	    return 'return ' + $(node.first);
 	},
+	unless: function (node) {
+	    var code = indent(function () {
+		return 'if (!(' + $(node.first) + ')) {\n' + $$(node.second) + _(-4) + '}';
+	    });
+	    if (node.third)
+		code += indent(function () '\nelse {\n' + $$(node.third) + _(-4) + '}');
+	    return code;
+	},
 	while: function (node) {
 	    return indent(function () {
 		return 'while (' + $(node.first) + ') {\n' +

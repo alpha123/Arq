@@ -403,6 +403,7 @@ exports.parser = function (tokens) {
 	var nested = ifStatement.nested;
 	this.first = expression(0);
 	this.second = block('then');
+
 	if (token.id == 'else') {
 	    scope.reserve(token);
 	    advance('else');
@@ -416,8 +417,26 @@ exports.parser = function (tokens) {
 	}
 	else
 	    this.third = null;
+
 	if (!nested)
 	    advance('end');
+	this.arity = 'statement';
+	return this;
+    });
+
+    stmt('unless', function () {
+	this.first = expression(0);
+	this.second = block('do');
+
+	if (token.id == 'else') {
+	    scope.reserve(token);
+	    advance('else');
+	    this.third = block();
+	}
+	else
+	    this.third = null;
+
+	advance('end');
 	this.arity = 'statement';
 	return this;
     });
@@ -425,8 +444,8 @@ exports.parser = function (tokens) {
     stmt('while', function () {
 	this.first = expression(0);
 	this.second = block('do');
-	this.arity = 'statement';
 	advance('end');
+	this.arity = 'statement';
 	return this;
     });
 
@@ -442,8 +461,8 @@ exports.parser = function (tokens) {
 	advance();
 	this.second = expression(0);
 	this.third = block('do');
-	this.arity = 'statement';
 	advance('end');
+	this.arity = 'statement';
 	return this;
     });
 
