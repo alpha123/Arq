@@ -186,9 +186,11 @@ exports.compiler = function (ast, options) {
 	},
 	statement: function (node) statements[node.value].apply(this, arguments),
 	ternary: function (node) {
+	    var isUnless = node.value == 'unless';
 	    return '(function () {\n' +
-	         _(4) + 'if (' + $(node.first) + ') {\n' + _(8) + 'return ' + $(node.second) + ';\n' + _(4) + '}\n' +
-		 (node.third ? _(4) + 'else {\n' + _(8) + 'return ' + $(node.third) + ';\n' + _(4) + '}\n' : '') +
+	    _(4) + 'if (' + (isUnless ? '!(' : '') + $(node.first) + (isUnless ? ')' : '') + ') {\n' +
+	    _(8) + 'return ' + $(node.second) + ';\n' + _(4) + '}\n' +
+		   (node.third ? _(4) + 'else {\n' + _(8) + 'return ' + $(node.third) + ';\n' + _(4) + '}\n' : '') +
 		   '})()';
 	},
 	unary: function (node) val(unOps, node.value) + $(node.first)

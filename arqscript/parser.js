@@ -280,7 +280,7 @@ exports.parser = function (tokens) {
 	return this;
     });
 
-    infix('if', 20, function (left) {
+    function ternaryIf(left) {
 	this.first = expression(0);
 	this.second = left;
 	if (token.value == 'else') {
@@ -291,7 +291,10 @@ exports.parser = function (tokens) {
 	    this.third = null;
 	this.arity = 'ternary';
 	return this;
-    });
+    }
+
+    infix('if', 20, ternaryIf);
+    infix('unless', 20, ternaryIf);
 
     infixr('and', 30);
     infixr('but', 30);
