@@ -21,10 +21,12 @@ exports.compiler = function (ast, options) {
 	and: '&&',
 	but: '&&',
 	or: '||',
+	'%%': '%',
 	'=': '===',
 	'/=': '!==',
 	'<': compareOp('<'), '<=': compareOp('<='),
 	'>': compareOp('>'), '>=': compareOp('>='),
+	'%': function (node) '(function (__ref$) (' + $(node.first) + ' % __ref$ + __ref$) % __ref$)(' + $(node.second) + ')',
 	in: function (node) $(node.second) + '.contains(' + $(node.first) + ')',
 	of: function (node) $(node.first) + ' in ' + $(node.second),
 	'(': function (node) {

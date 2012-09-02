@@ -26,8 +26,8 @@ exports.tokenizer = function (string, prefix, suffix) {
 	tokens.push(value);
     }
 
-    prefix = prefix || '<>:/';
-    suffix = suffix || '=>';
+    prefix = prefix || '<>:/%';
+    suffix = suffix || '=>%';
 
     function token(type, value) {
 	return {

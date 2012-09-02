@@ -309,6 +309,8 @@ exports.parser = function (tokens) {
     infix('-', 50);
     infix('*', 60);
     infix('/', 60);
+    infix('%', 60);
+    infix('%%', 60);
     infix('in', 70);
     infix('of', 70);
 
