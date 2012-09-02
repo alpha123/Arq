@@ -210,3 +210,14 @@ console.addCommand('arqscriptcompile', 'Compiles ArqScript into JavaScript', 'ar
 console.addCommand('arqscripteval', 'Evaluates ArqScript code', 'arqscripteval code...', function () {
     return eval(arqScriptCompile.apply(this, arguments).join('\n'));
 });
+
+console.addCommand('arqscriptexec', 'Executes a file of ArqScript code', 'arqscriptexec file', function (filename) {
+    var {tokenizer} = require('Arq/arqscript/lexer'), {parser} = require('Arq/arqscript/parser'),
+        {compiler} = require('Arq/arqscript/compiler'), file = OpenRawFile('~/' + filename), code, result;
+    try { code = CreateStringFromByteArray(file.read(file.getSize())); }
+    finally { file.close(); }
+    result = eval(compiler(parser(tokenizer(code))())());
+    if (typeof result == 'string')
+	return result.split('\n');
+    return result;
+});
