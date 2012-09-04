@@ -30,19 +30,55 @@ exports.compiler = function (ast, options) {
 	in: function (node) $(node.second) + '.contains(' + $(node.first) + ')',
 	of: function (node) $(node.first) + ' in ' + $(node.second),
 	'(': function (node) {
-	    var [kwargs, args] = node.second.partition(function (a) a.arity == 'binary' && a.value == ':'), kwcode;
-	    if (kwargs.length) {
-		if (!hasOwn.call(addedHelpers, 'keywordargs')) {
-		    addedHelpers.keywordargs = true;
-		    footer = '\n\n' + helpers.keywordargs + footer;
+	    var [kwargs, args] = node.second.partition(function (a) a.arity == 'binary' && a.value == ':'),
+	        fncode, argscode, kwcode, self = 'null', prefix = '', suffix = '';
+
+	    function compileArgs(args) {
+		function isSplat(arg) { return arg.arity == 'unary' && arg.value == '...'; }
+
+		for (var code = '', arg, starti, i = 0; arg = args[i], i < args.length; ++i) {
+		    if (i > 0) code += '.concat('
+		    if (isSplat(arg))
+			code += $(arg.first) + (i > 0 ? ')' : '');
+		    else {
+			code += '[';
+			starti = i;
+			for (; arg = args[i], i < args.length && !isSplat(arg); ++i)
+			    code += $(arg) + ', ';
+			code = code.slice(0, -2) + ']' + (starti > 0 ? ')' : '');
+			arg = args[--i];
+		    }
 		}
+		return code;
+	    }
+
+	    // Handle keyword arguments fn(a: "a", c: "c", "b")
+	    if (kwargs.length) {
+		addHelper('keywordargs');
 		kwcode = kwargs.reduce(function (code, arg) {
 		    return code + ', "' + escapeName(arg.first.value) + '": ' + $(arg.second);
 		}, '').slice(2);
-		return '__keywordargs$(' + $(node.first) + ')([' + $$(args, ', ', false).slice(0, -2) +
-		                                             '], {' + kwcode + '})';
+		fncode = '__keywordargs$(' + $(node.first) + ')';
+		argscode = '(' + compileArgs(args) + ', {' + kwcode + '})';
 	    }
-	    return $(node.first) + '(' + $$(args, ', ', false).slice(0, -2) + ')';
+	    else {
+		// Handle splat operator fn(args...)
+		if (args.some(function (a) a.arity == 'unary' && a.value == '...')) {
+		    // Be sure not to mess up this/self
+		    if (node.first.arity == 'binary' && node.first.value == '.') {
+			prefix = '(function (__ref$) { return ';
+			suffix = '; })(' + $(node.first.first) + ')';
+			node.first.first = {arity: 'name', value: '__ref$'};
+			self = '__ref$';
+		    }
+		    argscode = '.apply(' + self + ', ' + compileArgs(args) + ')';
+		}
+		else
+		    argscode = '(' + $$(args, ', ', false).slice(0, -2) + ')';
+
+		fncode = $(node.first);
+	    }
+	    return prefix + fncode + argscode + suffix;
 	},
 	'.': function (node) {
 	    return nameGet($(node.first), $(node.second));
@@ -234,11 +270,15 @@ exports.compiler = function (ast, options) {
 	};
     }
 
-    function nameGet(context, name) {
-	if (!hasOwn.call(addedHelpers, 'bind')) {
-	    addedHelpers.bind = true;
-	    footer = '\n\n' + helpers.bind + footer;
+    function addHelper(helper) {
+	if (!hasOwn.call(addedHelpers, helper)) {
+	    addedHelpers[helper] = true;
+	    footer = '\n\n' + helpers[helper] + footer;
 	}
+    }
+
+    function nameGet(context, name) {
+	addHelper('bind');
 
 	// Do magic for case-insensitivity. Basically iterate through all keys of the context until
 	// one is found that equals the target key, ignoring case.

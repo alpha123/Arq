@@ -140,6 +140,17 @@ exports.parser = function (tokens) {
 	return sym;
     }
 
+    function postfix(id, led) {
+	var sym = symbol(id, 100);
+	sym.led = led || function (left) {
+	    scope.reserve(this);
+	    this.first = left;
+	    this.arity = 'unary';
+	    return this;
+	};
+	return sym;
+    }
+
     function stmt(id, std) {
 	var sym = symbol(id);
 	sym.std = std;
@@ -374,6 +385,8 @@ exports.parser = function (tokens) {
 	scope.pop();
 	return this;
     });
+
+    postfix('...');
 
     stmt('function', function () {
 	var params = [], sig;
