@@ -222,6 +222,7 @@ exports.compiler = function (ast, options) {
 		return nameGet('global', '"' + escapeName(node.value) + '"');
 	    return escapeName(node.value);
 	},
+	self: function (node) 'this',
 	statement: function (node) statements[node.value].apply(this, arguments),
 	ternary: function (node) {
 	    var isUnless = node.value == 'unless';
