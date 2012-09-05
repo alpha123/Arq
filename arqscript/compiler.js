@@ -222,6 +222,13 @@ exports.compiler = function (ast, options) {
 		return nameGet('global', '"' + escapeName(node.value) + '"');
 	    return escapeName(node.value);
 	},
+	operator: function (node) {
+	    return 'function (__a$, __b$) { return ' + compilers.binary({
+		value: node.value,
+		first: {arity: 'name', value: '__a$'},
+		second: {arity: 'name', value: '__b$'}
+	    }) + '; }';
+	},
 	self: function (node) 'this',
 	statement: function (node) statements[node.value].apply(this, arguments),
 	ternary: function (node) {

@@ -364,7 +364,15 @@ exports.parser = function (tokens) {
     prefix('-');
 
     prefix('(', function () {
-	var e = expression(0);
+	var e;
+	// Haskell-style (+) notation; nums.reduce((+))
+	if (hasOwn.call(symbols, token.value)) {
+	     e = {from: token.from - 1, to: token.to + 1, line: token.line, arity: 'operator', value: token.value};
+	    advance();
+	}
+	// Regular (2 + 2) * 3 stuff
+	else
+	    e = expression(0);
 	advance(')');
 	return e;
     });
