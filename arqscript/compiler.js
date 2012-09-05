@@ -59,7 +59,7 @@ exports.compiler = function (ast, options) {
 		    return code + ', "' + escapeName(arg.first.value) + '": ' + $(arg.second);
 		}, '').slice(2);
 		fncode = '__keywordargs$(' + $(node.first) + ')';
-		argscode = '(' + compileArgs(args) + ', {' + kwcode + '})';
+		argscode = '(' + (args.length ? compileArgs(args) + ', {' : '[], {') + kwcode + '})';
 	    }
 	    else {
 		// Handle splat operator fn(args...)
