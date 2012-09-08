@@ -146,7 +146,7 @@ exports.compiler = function (ast, options) {
 	    });
 	},
 	function: function (node) {
-	    return compilers.assignment(node, compilers.lambda({first: node.second, second: node.third}));
+	    return compilers.assignment(node, compilers.lambda({first: node.second, second: node.third}, false));
 	},
 	if: function (node, prefix) {
 	    if (prefix == null) prefix = '';
@@ -192,7 +192,10 @@ exports.compiler = function (ast, options) {
 		return $(node.first) + ' ' + val(binOps, node.value) + ' ' + $(node.second);
 	    return binOps[node.value].apply(this, arguments);
 	},
-	lambda: function (node) {
+	lambda: function (node, returnLastExpression) {
+	    if (returnLastExpression == null) returnLastExpression = true;
+
+	    // Handle default arguments do(a, b: 2, c: 3) ... end
 	    var defaults = node.first.filter(function (param, index) {
 		// Get all parameters that have default values, while replacing those parameters with just their name.
 		var isDefault = param.arity == 'binary' && param.value == ':';
@@ -204,9 +207,18 @@ exports.compiler = function (ast, options) {
 		var paramName = $(param.first);
 		return code + '\n' + _(4) + 'if (' + paramName + ' == null)\n' +
 		                _(8) + paramName + ' = ' + $(param.second) + ';';
-	    }, ''), oldTop = topLevel, oldVars = vars, args, body, code;
+	    }, ''), oldTop = topLevel, oldVars = vars, args, body, code, lastExpression;
+
 	    topLevel = '';
 	    vars = Object.create(vars);
+
+	    if (returnLastExpression && node.second) {
+		node.second = Array.from(node.second);
+		lastExpression = node.second.getLast();
+		if (lastExpression.arity != 'statement')
+		    node.second[node.second.length - 1] = {arity: 'statement', value: 'return', first: lastExpression};
+	    }
+
 	    code = indent(function () {
 		args = $$(node.first, ', ', false).slice(0, -2);
 		body = node.second ? '\n' + $$(node.second) : defaults.length ? '\n' : ' ';
