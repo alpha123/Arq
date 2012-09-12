@@ -148,28 +148,11 @@ exports.compiler = function (ast, options) {
 	function: function (node) {
 	    return compilers.assignment(node, compilers.lambda({first: node.second, second: node.third}, false));
 	},
-	if: function (node, prefix) {
-	    if (prefix == null) prefix = '';
-	    var code = indent(function () {
-		return prefix + 'if (' + $(node.first) + ') {\n' + $$(node.second) + _(-4) + '}';
-	    });
-	    if (node.third && node.third.arity == 'statement' && node.third.value == 'if')
-		code += statements.if(node.third, '\nelse ');
-	    else if (node.third)
-		code += indent(function () '\nelse {\n' + $$(node.third) + _(-4) + '}');
-	    return code;
-	},
+	if: conditionalStatement('if', '', ''),
 	return: function (node) {
 	    return 'return ' + $(node.first);
 	},
-	unless: function (node) {
-	    var code = indent(function () {
-		return 'if (!(' + $(node.first) + ')) {\n' + $$(node.second) + _(-4) + '}';
-	    });
-	    if (node.third)
-		code += indent(function () '\nelse {\n' + $$(node.third) + _(-4) + '}');
-	    return code;
-	},
+	unless: conditionalStatement('unless', '!(', ')'),
 	while: function (node) {
 	    return indent(function () {
 		return 'while (' + $(node.first) + ') {\n' +
@@ -287,6 +270,20 @@ exports.compiler = function (ast, options) {
 		return '(function (__ref$) { return ' + $(node.first) + ' ' + op + ' __ref$ && ' + $(node.second) + '; })(' + $(target) + ')';
 	    }
 	    return $(node.first) + ' ' + op + ' ' + $(node.second);
+	};
+    }
+
+    function conditionalStatement(name, preCond, postCond) {
+	return function (node, prefix) {
+	    if (prefix == null) prefix = '';
+	    var code = indent(function () {
+		return prefix + 'if (' + preCond + $(node.first) + postCond + ') {\n' + $$(node.second) + _(-4) + '}';
+	    });
+	    if (node.third && node.third.arity == 'statement' && node.third.value == name)
+		code += statements[name](node.third, '\nelse ');
+	    else if (node.third)
+		code += indent(function () '\nelse {\n' + $$(node.third) + _(-4) + '}');
+	    return code;
 	};
     }
 

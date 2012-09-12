@@ -425,47 +425,36 @@ exports.parser = function (tokens) {
 	return this;
     });
 
-    stmt('if', function ifStatement() {
-	var nested = ifStatement.nested;
-	this.first = expression(0);
-	this.second = block('then');
+    function conditionalParser(keyword, blockKeyword) {
+	return function conditionalStatement() {
+	    var nested = conditionalStatement.nested;
+	    this.first = expression(0);
+	    this.second = block(blockKeyword);
 
-	if (token.id == 'else') {
-	    scope.reserve(token);
-	    advance('else');
-	    if (token.id == 'if') {
-		ifStatement.nested = true;
-		this.third = statement();
+	    if (token.id == 'else') {
+		scope.reserve(token);
+		advance('else');
+		if (token.id == keyword) {
+		    conditionalStatement.nested = true;
+		    this.third = statement();
+		}
+		else
+		    this.third = block();
+		conditionalStatement.nested = false;
 	    }
 	    else
-		this.third = block();
-	    ifStatement.nested = false;
-	}
-	else
-	    this.third = null;
+		this.third = null;
 
-	if (!nested)
-	    advance('end');
-	this.arity = 'statement';
-	return this;
-    });
+	    if (!nested)
+		advance('end');
+	    this.arity = 'statement';
+	    return this;
+	};
+    }
 
-    stmt('unless', function () {
-	this.first = expression(0);
-	this.second = block('do');
+    stmt('if', conditionalParser('if', 'then'));
 
-	if (token.id == 'else') {
-	    scope.reserve(token);
-	    advance('else');
-	    this.third = block();
-	}
-	else
-	    this.third = null;
-
-	advance('end');
-	this.arity = 'statement';
-	return this;
-    });
+    stmt('unless', conditionalParser('unless', 'do'));
 
     stmt('while', function () {
 	this.first = expression(0);
