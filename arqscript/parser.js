@@ -3,6 +3,12 @@ var hasOwn = Object.prototype.hasOwnProperty;
 exports.parser = function (tokens) {
     var token,
     symbols = {},
+    defaultNud = function () {
+	throw new Error('Syntax error "' + this.id + (this.line ? '" at line ' + this.line : '"'));
+    },
+    defaultLed = function (left) {
+	throw new Error('Unknown operator "' + this.id + (this.line ? '" at line ' + this.line : '"'));
+    },
     Symbol = {
 	id: '',
 	lbp: 0,
@@ -10,13 +16,8 @@ exports.parser = function (tokens) {
 	first: null,
 	second: null,
 	third: null,
-
-	nud: function () {
-	    throw new Error('Syntax error "' + this.id + (this.line ? '" at line ' + this.line : '"'));
-	},
-	led: function (left) {
-	    throw new Error('Unknown operator "' + this.id + (this.line ? '" at line ' + this.line : '"'));
-	}
+	nud: defaultNud,
+	led: defaultLed
     },
     scope,
     Scope = {
@@ -366,10 +367,14 @@ exports.parser = function (tokens) {
     prefix('-');
 
     prefix('(', function () {
-	var e;
+	var e, arity;
 	// Haskell-style (+) notation; nums.reduce((+))
 	if (hasOwn.call(symbols, token.value)) {
-	     e = {from: token.from - 1, to: token.to + 1, line: token.line, arity: 'operator', value: token.value};
+	    if (symbols[token.value].led != defaultLed)
+		arity = 'binopfn';
+	    else
+		arity = 'unopfn';
+	    e = {from: token.from - 1, to: token.to + 1, line: token.line, arity: arity, value: token.value};
 	    advance();
 	}
 	// Regular (2 + 2) * 3 stuff

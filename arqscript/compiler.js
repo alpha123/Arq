@@ -175,6 +175,13 @@ exports.compiler = function (ast, options) {
 		return $(node.first) + ' ' + val(binOps, node.value) + ' ' + $(node.second);
 	    return binOps[node.value].apply(this, arguments);
 	},
+	binopfn: function (node) {
+	    return 'function (__a$, __b$) { return ' + compilers.binary({
+		value: node.value,
+		first: {arity: 'name', value: '__a$'},
+		second: {arity: 'name', value: '__b$'}
+	    }) + '; }';
+	},
 	lambda: function (node, returnLastExpression) {
 	    if (returnLastExpression == null) returnLastExpression = true;
 
@@ -227,13 +234,6 @@ exports.compiler = function (ast, options) {
 		return nameGet('global', '"' + escapeName(node.value) + '"');
 	    return escapeName(node.value);
 	},
-	operator: function (node) {
-	    return 'function (__a$, __b$) { return ' + compilers.binary({
-		value: node.value,
-		first: {arity: 'name', value: '__a$'},
-		second: {arity: 'name', value: '__b$'}
-	    }) + '; }';
-	},
 	self: function (node) 'this',
 	statement: function (node) statements[node.value].apply(this, arguments),
 	ternary: function (node) {
@@ -244,7 +244,13 @@ exports.compiler = function (ast, options) {
 		   (node.third ? _(4) + 'else {\n' + _(8) + 'return ' + $(node.third) + ';\n' + _(4) + '}\n' : '') +
 		   '})()';
 	},
-	unary: function (node) val(unOps, node.value) + $(node.first)
+	unary: function (node) val(unOps, node.value) + $(node.first),
+	unopfn: function (node) {
+	    return 'function (__a$) { return ' + compilers.unary({
+		value: node.value,
+		first: {arity: 'name', value: '__a$'}
+	    }) + '; }';
+	}
     }, $, $$;
 
     function _(diff) {
