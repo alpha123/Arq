@@ -14,7 +14,7 @@ function escapeName(name) {
 exports.compiler = function (ast, options) {
     options = options || {};
 
-    var header = options.bare ? '' : '(function (global, isFinite, undefined) {\n\n',
+    var header = options.bare ? '' : '(function (global, isFinite, undefined) {',
         footer = options.bare ? '' : '\n\n})(this, isFinite);',
         vars = {}, topLevel = '', indentLevel = 0, addedHelpers = {},
     binOps = {
@@ -178,11 +178,15 @@ exports.compiler = function (ast, options) {
 	lambda: function (node, returnLastExpression) {
 	    if (returnLastExpression == null) returnLastExpression = true;
 
-	    // Handle default arguments do(a, b: 2, c: 3) ... end
+	    // Handle default parameters do(a, b: 2, c: 3) end
 	    var defaults = node.first.filter(function (param, index) {
 		// Get all parameters that have default values, while replacing those parameters with just their name.
-		var isDefault = param.arity == 'binary' && param.value == ':';
-		if (isDefault)
+		var isDefault = param.arity == 'binary' && param.value == ':',
+		    isRest = param.arity == 'unary' && param.value == '...';
+
+		if (isRest)
+		    rest = param;
+		if (isDefault || isRest)
 		    node.first[index] = param.first;
 		vars[node.first[index].value] = true;
 		return isDefault;
@@ -190,7 +194,13 @@ exports.compiler = function (ast, options) {
 		var paramName = $(param.first);
 		return code + '\n' + _(4) + 'if (' + paramName + ' == null)\n' +
 		                _(8) + paramName + ' = ' + $(param.second) + ';';
-	    }, ''), oldTop = topLevel, oldVars = vars, args, body, code, lastExpression;
+	    }, ''), oldTop = topLevel, oldVars = vars, args, rest, body, code, lastExpression;
+
+	    // Handle splat parameter do(args...) end
+	    if (rest) {
+		addHelper('slice', true, 'var __slice$ = [].slice;');
+		defaults += '\n' + _(4) + $(rest.first) + ' = ' + '__slice$.call(arguments, ' + (node.first.length - 1) + ');';
+	    }
 
 	    topLevel = '';
 	    vars = Object.create(vars);
@@ -287,10 +297,13 @@ exports.compiler = function (ast, options) {
 	};
     }
 
-    function addHelper(helper) {
+    function addHelper(helper, useHeader, code) {
 	if (!hasOwn.call(addedHelpers, helper)) {
 	    addedHelpers[helper] = true;
-	    footer = '\n\n' + helpers[helper] + footer;
+	    if (useHeader)
+		header += '\n' + code;
+	    else
+		footer = '\n\n' + helpers[helper] + footer;
 	}
     }
 
@@ -352,6 +365,6 @@ exports.compiler = function (ast, options) {
 
     return function () {
 	var body = compileNodes(ast);
-	return header + topLevel + body + footer;
+	return header + '\n\n' + topLevel + body + footer;
     };
 };
