@@ -357,6 +357,8 @@ exports.parser = function (tokens) {
 	    }
 	}
 	advance(')');
+	if (token.id == 'do')
+	    args.push(expression(0));
 	return this;
     });
 
