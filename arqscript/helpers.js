@@ -1,12 +1,17 @@
 // Helper functions for ArqScript
 
+// Ugly Function constructor stuff is a workaround to get bound functions to work with keyword arguments.
+// Otherwise, bound functions would appear as having no arguments.
 exports.bind =
 'function __bind$(fn, target) {\n\
     if (typeof fn != "function")\n\
         return fn;\n\
-    return function () {\n\
-        return fn.apply(target, arguments);\n\
-    };\n\
+    var source = "" + fn,\n\
+        args = source.substring(source.indexOf("(") + 1, source.indexOf(")")),\n\
+        bound = Function(args, "return arguments.callee.fn.apply(arguments.callee.target, arguments);");\n\
+    bound.fn = fn;\n\
+    bound.target = target;\n\
+    return bound;\n\
 }';
 
 exports.keywordargs =
