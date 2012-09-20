@@ -245,7 +245,7 @@ exports.compiler = function (ast, options) {
 	},
 	literal: function (node) typeof node.value == 'string' ? '"' + node.value + '"' : node.value,
 	name: function (node) {
-	    if (!(node.value in vars) && !node.value.startsWith('__'))
+	    if (!(node.value in vars) && !(node.value.startsWith('__') && node.value.endsWith('$')))
 		return nameGet('global', '"' + escapeName(node.value) + '"');
 	    return escapeName(node.value);
 	},
