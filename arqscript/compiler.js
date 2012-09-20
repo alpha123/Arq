@@ -217,9 +217,7 @@ exports.compiler = function (ast, options) {
 	    // Handle splat parameter do(args...) end
 	    if (rest) {
 		addHelper('slice', true, 'var __slice$ = [].slice;');
-		defaults += '\n' + _(4) + $(rest.first) + ' = __slice$.call(arguments, ' + (node.first.length - 1) +
-		            // Prevent the keyword splat object from being included in the regular splat array.
-		            /*(node.first.getLast().value.startsWith('__kwargs$') ? ', -1' : '') +*/ ');';
+		defaults += '\n' + _(4) + $(rest.first) + ' = __slice$.call(arguments, ' + (node.first.length - 1) + ');';
 	    }
 
 	    // Handle keyword splat do(kwargs: ...) end
