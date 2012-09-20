@@ -287,7 +287,12 @@ exports.parser = function (tokens) {
 	if (left.arity != 'name')
 	    throw new Error('Expected a name at line ' + left.line);
 	this.first = left;
-	this.second = expression(0);
+	if (token.arity == 'operator' && token.value == '...') {
+	    this.second = token;
+	    advance();
+	}
+	else
+	    this.second = expression(0);
 	this.arity = 'binary';
 	return this;
     });

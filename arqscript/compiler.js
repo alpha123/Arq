@@ -191,23 +191,40 @@ exports.compiler = function (ast, options) {
 		var isDefault = param.arity == 'binary' && param.value == ':',
 		    isRest = param.arity == 'unary' && param.value == '...';
 
-		if (isRest)
+		// Test for a keyword splat instead of a default parameter (they look similar: do(a: 1) end, do(kwargs: ...) end)
+		if (isDefault && param.second.arity == 'operator' && param.second.value == '...') {
+		    keywordSplat = param;
+		    vars[param.first.value] = true;
+		    param.first.value = '__kwargs$' + param.first.value;
+		    node.first.splice(index, 1);
+		    node.first.unshift(param.first);
+		    isDefault = false;
+		}
+		else if (isRest)
 		    rest = param;
+
 		if (isDefault || isRest)
 		    node.first[index] = param.first;
-		vars[node.first[index].value] = true;
+		if (!keywordSplat)
+		    vars[node.first[index].value] = true;
 		return isDefault;
 	    }).reduce(function (code, param) {
 		var paramName = $(param.first);
 		return code + '\n' + _(4) + 'if (' + paramName + ' == null)\n' +
 		                _(8) + paramName + ' = ' + $(param.second) + ';';
-	    }, ''), oldTop = topLevel, oldVars = vars, args, rest, body, code, lastExpression;
+	    }, ''), oldTop = topLevel, oldVars = vars, args, rest, keywordSplat, body, code, lastExpression;
 
 	    // Handle splat parameter do(args...) end
 	    if (rest) {
 		addHelper('slice', true, 'var __slice$ = [].slice;');
-		defaults += '\n' + _(4) + $(rest.first) + ' = ' + '__slice$.call(arguments, ' + (node.first.length - 1) + ');';
+		defaults += '\n' + _(4) + $(rest.first) + ' = __slice$.call(arguments, ' + (node.first.length - 1) +
+		            // Prevent the keyword splat object from being included in the regular splat array.
+		            /*(node.first.getLast().value.startsWith('__kwargs$') ? ', -1' : '') +*/ ');';
 	    }
+
+	    // Handle keyword splat do(kwargs: ...) end
+	    if (keywordSplat)
+		defaults += '\n' + _(4) + 'var ' + escapeName(keywordSplat.first.value.slice(9)) + ' = ' + $(keywordSplat.first) + ' || {};';
 
 	    topLevel = '';
 	    vars = Object.create(vars);
