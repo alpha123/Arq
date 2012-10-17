@@ -170,6 +170,11 @@ exports.compiler = function (ast, options) {
 		return nameSet($(node.first.first), $(node.first.second), (value == null ? $(node.second) : value));
 	    return $(node.first) + ' = ' + (value == null ? $(node.second) : value);
 	},
+	atom: function (node) {
+	    addHelper('atom' + node.value.id, true, 'var __atom' + node.value.id + '$ = {id: ' + node.value.id +
+		                                    ', name: "' + node.value.name + '"}');
+	    return '__atom' + node.value.id + '$';
+	},
 	binary: function (node) {
 	    if (!hasOwn.call(binOps, node.value) || typeof val(binOps, node.value) == 'string')
 		return $(node.first) + ' ' + val(binOps, node.value) + ' ' + $(node.second);

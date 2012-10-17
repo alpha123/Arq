@@ -3,6 +3,8 @@ var hasOwn = Object.prototype.hasOwnProperty;
 exports.parser = function (tokens) {
     var token,
     symbols = {},
+    atoms = {},
+    atomID = 0,
     defaultNud = function () {
 	throw new Error('Syntax error "' + this.id + (this.line ? '" at line ' + this.line : '"'));
     },
@@ -187,6 +189,13 @@ exports.parser = function (tokens) {
 	    sym = symbols['(literal)'];
 	    type = 'literal';
 	}
+	else if (type == 'atom') {
+	    if (atoms[value])
+		return atoms[value];
+	    sym = symbols['(atom)'];
+	    type = 'atom';
+	    value = {id: atomID++, name: value};
+	}
 	else if (type == 'comment') {
 	    sym = symbols['(comment)'];
 	    type = 'comment';
@@ -198,6 +207,8 @@ exports.parser = function (tokens) {
 	token.line = tok.line;
 	token.value = value;
 	token.arity = type;
+	if (type == 'atom')
+	    atoms[value.name] = token;
 	return token;
     }
 
@@ -260,6 +271,7 @@ exports.parser = function (tokens) {
 
 
     symbol('(name)').nud = function () this;
+    symbol('(atom)').nud = function () this;
     symbol('(literal)').nud = function () this;
     symbol('(comment)').nud = function () this;
     symbol('(end)').terminates = true;

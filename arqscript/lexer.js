@@ -20,7 +20,7 @@ var hasYield = (function () {
 })();
 
 exports.tokenizer = function (string, prefix, suffix) {
-    var current, line = 1, from, index = 0, num, str, tokens = [];
+    var current, line = 1, from, index = 0, num, str, isAtom, tokens = [];
 
     function yield(value) {  // I'm not sure how this is legal, but I'm fortunate that it is.
 	tokens.push(value);
@@ -54,14 +54,15 @@ exports.tokenizer = function (string, prefix, suffix) {
 	}
 	else if (current <= ' ')
 	    advance();
-	else if (/[a-zA-Z_$]/.test(current)) {
-	    str = current;
+	else if (/[a-zA-Z_$]/.test(current) || current == "'") {
+	    isAtom = current == "'";
+	    str = isAtom ? '' : current;
 	    advance();
 	    while (current && /[a-zA-Z0-9\-_$?!]/.test(current)) {
 		str += current;
 		advance();
 	    }
-	    yield(token('identifier', str.toLowerCase()));
+	    yield(token(isAtom ? 'atom' : 'identifier', str.toLowerCase()));
 	}
 	else if (current >= '0' && current <= '9') {
 	    str = current;
