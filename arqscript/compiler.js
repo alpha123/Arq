@@ -145,12 +145,20 @@ exports.compiler = function (ast, options) {
 		return code;
 	    });
 	},
+	fork: function (node) {
+	    if (!options.scenario)
+		throw new Error('fork statement requires Scenario mode at line ' + node.line);
+	    return options.scenario + '.beginFork();\n' + _(4) + indent(function () $$(node.first)) + _() + options.scenario + '.endFork();\n';
+	},
 	function: function (node) {
 	    return compilers.assignment(node, compilers.lambda({first: node.second, second: node.third}, false));
 	},
 	if: conditionalStatement('if', '', ''),
 	return: function (node) {
 	    return 'return ' + $(node.first);
+	},
+	sync: function (node) {
+	    return options.scenario + '.synchronize();';
 	},
 	unless: conditionalStatement('unless', '!(', ')'),
 	while: function (node) {
@@ -250,6 +258,8 @@ exports.compiler = function (ast, options) {
 	},
 	literal: function (node) typeof node.value == 'string' ? '"' + node.value + '"' : node.value,
 	name: function (node) {
+	    if (options.scenario && node.value == 'sync')
+		return statements.sync(node);
 	    if (!(node.value in vars) && !(node.value.startsWith('__') && node.value.endsWith('$')))
 		return nameGet('global', '"' + escapeName(node.value) + '"');
 	    return escapeName(node.value);

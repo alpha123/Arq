@@ -203,7 +203,7 @@ function () {
 function arqScriptCompile() {
     var {tokenizer} = require('Arq/arqscript/lexer'), {parser} = require('Arq/arqscript/parser'),
         {compiler} = require('Arq/arqscript/compiler');
-    return compiler(parser(tokenizer(toCode(arguments)))(), {bare: true})().split('\n');
+    return compiler(parser(tokenizer(toCode(arguments)))(), {bare: true, scenario: 'scene'})().split('\n');
 }
 console.addCommand('arqscriptcompile', 'Compiles ArqScript into JavaScript', 'arqscriptcompile code...', arqScriptCompile);
 

@@ -420,6 +420,13 @@ exports.parser = function (tokens) {
 
     postfix('...');
 
+    stmt('fork', function () {
+	this.first = statements();
+	advance('end');
+	this.arity = 'statement';
+	return this;
+    });
+
     stmt('function', function () {
 	var params = [], sig;
 	newScope();
