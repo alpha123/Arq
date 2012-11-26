@@ -19,15 +19,16 @@ var hasYield = (function () {
     }
 })();
 
-exports.tokenizer = function (string, prefix, suffix) {
-    var current, line = 1, from, index = 0, num, str, isAtom, tokens = [];
+exports.tokenizer = function (string, options) {
+    var current, line = 1, from, index = 0, num, str, isAtom, tokens = [], prefix, suffix;
 
     function yield(value) {  // I'm not sure how this is legal, but I'm fortunate that it is.
 	tokens.push(value);
     }
 
-    prefix = prefix || '<>:/%.';
-    suffix = suffix || '=>%.';
+    options = options || {};
+    prefix = options.prefix || '<>:/%.';
+    suffix = options.suffix || '=>%.';
 
     function token(type, value) {
 	return {
@@ -62,7 +63,7 @@ exports.tokenizer = function (string, prefix, suffix) {
 		str += current;
 		advance();
 	    }
-	    yield(token(isAtom ? 'atom' : 'identifier', str.toLowerCase()));
+	    yield(token(isAtom ? 'atom' : 'identifier', options.caseSensitive ? str : str.toLowerCase()));
 	}
 	else if (current >= '0' && current <= '9') {
 	    str = current;
