@@ -344,6 +344,9 @@ exports.compiler = function (ast, options) {
     }
 
     function nameGet(context, name) {
+	if (options.caseSensitive)
+	    return context + '[' + name + ']';
+
 	addHelper('bind');
 
 	// Do magic for case-insensitivity. Basically iterate through all keys of the context until
@@ -369,6 +372,9 @@ exports.compiler = function (ast, options) {
     }
 
     function nameSet(context, name, value) {
+	if (options.caseSensitive)
+	    return context + '[' + name + '] = ' + value;
+
 	// Really, I firmly believe in case-insensitivity.
 	return indentstr(function () {
 	    return '(function (__ref$, __name$, __value$, __key$) {\n' +

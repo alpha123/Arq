@@ -203,7 +203,7 @@ function () {
 function arqScriptCompile() {
     var {tokenizer} = require('Arq/arqscript/lexer'), {parser} = require('Arq/arqscript/parser'),
         {compiler} = require('Arq/arqscript/compiler');
-    return compiler(parser(tokenizer(toCode(arguments)))(), {bare: true, scenario: 'scene'})().split('\n');
+    return compiler(parser(tokenizer(toCode(arguments)))(), {bare: true, caseSensitive: true, scenario: 'scene'})().split('\n');
 }
 console.addCommand('arqscriptcompile', 'Compiles ArqScript into JavaScript', 'arqscriptcompile code...', arqScriptCompile);
 
@@ -216,7 +216,7 @@ console.addCommand('arqscriptexec', 'Executes a file of ArqScript code', 'arqscr
         {compiler} = require('Arq/arqscript/compiler'), file = OpenRawFile('~/' + filename), code, result;
     try { code = CreateStringFromByteArray(file.read(file.getSize())); }
     finally { file.close(); }
-    result = eval(compiler(parser(tokenizer(code))())());
+    result = eval(compiler(parser(tokenizer(code))(), {caseSensitive: true})());
     if (typeof result == 'string')
 	return result.split('\n');
     return result;
