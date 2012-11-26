@@ -217,6 +217,7 @@ console.addCommand('arqscriptexec', 'Executes a file of ArqScript code', 'arqscr
     try { code = CreateStringFromByteArray(file.read(file.getSize())); }
     finally { file.close(); }
     result = eval(compiler(parser(tokenizer(code))(), {caseSensitive: true})());
+    result = eval(compiler(parser(tokenizer(code))(), {scenario: 'scene', caseSensitive: true})());
     if (typeof result == 'string')
 	return result.split('\n');
     return result;
