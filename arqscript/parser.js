@@ -3,8 +3,8 @@ var hasOwn = Object.prototype.hasOwnProperty;
 exports.parser = function (tokens) {
     var token,
     symbols = {},
-    atoms = {},
     atomID = 0,
+    atomIDs = {},
     defaultNud = function () {
 	throw new Error('Syntax error "' + this.id + (this.line ? '" at line ' + this.line : '"'));
     },
@@ -69,6 +69,10 @@ exports.parser = function (tokens) {
 	    token.reserved = true;
 	}
     }, infix, infixr;
+
+    function getAtomID(name) {
+	return hasOwn.call(atomIDs, name) ? atomIDs[name] : (atomIDs[name] = atomID++);
+    }
 
     function newScope() {
 	var s = scope;
@@ -190,11 +194,9 @@ exports.parser = function (tokens) {
 	    type = 'literal';
 	}
 	else if (type == 'atom') {
-	    if (atoms[value])
-		return atoms[value];
 	    sym = symbols['(atom)'];
 	    type = 'atom';
-	    value = {id: atomID++, name: value};
+	    value = {id: getAtomID(value), name: value};
 	}
 	else if (type == 'comment') {
 	    sym = symbols['(comment)'];
@@ -207,8 +209,6 @@ exports.parser = function (tokens) {
 	token.line = tok.line;
 	token.value = value;
 	token.arity = type;
-	if (type == 'atom')
-	    atoms[value.name] = token;
 	return token;
     }
 
@@ -342,8 +342,10 @@ exports.parser = function (tokens) {
     infix('%%', 60);
     infix('in', 70);
     infix('of', 70);
+    infix('|>', 80);
+    infix('<|', 80);
 
-    infix('.', 80, function (left) {
+    infix('.', 100, function (left) {
 	this.first = left;
 	if (token.arity != 'name')
 	    throw new Error('Expected a property name at line ' + token.line);
@@ -354,7 +356,7 @@ exports.parser = function (tokens) {
 	return this;
     });
 
-    infix('[', 80, function (left) {
+    infix('[', 100, function (left) {
 	this.first = left;
 	this.second = expression(0);
 	this.arity = 'binary';
@@ -362,7 +364,7 @@ exports.parser = function (tokens) {
 	return this;
     });
 
-    infix('(', 80, function (left) {
+    infix('(', 100, function (left) {
 	var args = [];
 	this.arity = 'binary';
 	this.first = left;

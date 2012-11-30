@@ -14,8 +14,12 @@ function escapeName(name) {
 exports.compiler = function (ast, options) {
     options = options || {};
 
-    var header = options.bare ? '' : '(function (global, isFinite, undefined) {',
-        footer = options.bare ? '' : '\n\n})(this, isFinite);',
+    var header = options.asFunction ?
+	    '(function () {\nvar global = this, isFinite = global.isFinite;'
+	: options.bare ? '' : '(function (global, isFinite, undefined) {',
+        footer = options.asFunction ?
+	    '\n\n})'
+	: options.bare ? '' : '\n\n})(this, isFinite);',
         vars = {}, topLevel = '', indentLevel = 0, addedHelpers = {},
     binOps = {
 	and: '&&',
@@ -29,6 +33,8 @@ exports.compiler = function (ast, options) {
 	'%': function (node) '(function (__ref$) (' + $(node.first) + ' % __ref$ + __ref$) % __ref$)(' + $(node.second) + ')',
 	in: function (node) $(node.second) + '.contains(' + $(node.first) + ')',
 	of: function (node) $(node.first) + ' in ' + $(node.second),
+	'|>': function (node) binOps['(']({first: node.second, second: [node.first]}),
+	'<|': function (node) binOps['('](node),
 	'(': function (node) {
 	    var [kwargs, args] = node.second.partition(function (a) a.arity == 'binary' && a.value == ':'),
 	        fncode, argscode, kwcode, self = 'null', prefix = '', suffix = '';
