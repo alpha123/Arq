@@ -1,6 +1,23 @@
-// Original credit to Flikky
+// This script was originially adapted from Flik's movement.js, but I'm pretty sure none of his code remains.
 
-var hasOwn = Object.prototype.hasOwnProperty, private_ = require('Arq/private'), [callbacks, callbacksKey] = private_.array();
+var hasOwn = Object.prototype.hasOwnProperty, private_ = require('Arq/private'), [callbacks, callbacksKey] = private_.array(),
+fullDirections = {
+    n: 'NORTH',
+    s: 'SOUTH',
+    e: 'EAST',
+    w: 'WEST'
+},
+moveCommands = {
+    N: [COMMAND_MOVE_NORTH],
+    S: [COMMAND_MOVE_SOUTH],
+    E: [COMMAND_MOVE_EAST],
+    W: [COMMAND_MOVE_WEST],
+    Ne: [COMMAND_MOVE_NORTH, COMMAND_MOVE_EAST],
+    Nw: [COMMAND_MOVE_NORTH, COMMAND_MOVE_WEST],
+    Se: [COMMAND_MOVE_SOUTH, COMMAND_MOVE_EAST],
+    Sw: [COMMAND_MOVE_SOUTH, COMMAND_MOVE_WEST],
+    D: [COMMAND_WAIT]
+};
 
 function canMoveDirection(person, direction, tiles) {
     return canMove(person, global['COMMAND_MOVE_' + direction.toUpperCase()], tiles);
@@ -73,7 +90,7 @@ function moveToward(person, target, tiles, callback) {
 }
 
 /**
-   Turns `person` to face `toFace`.
+   Turns `person` to face `toFace`. If not provided, `toFace` is assumed to be the input person.
 */
 function facePerson(person, toFace) {
     if (toFace == null) toFace = GetInputPerson();
@@ -91,95 +108,62 @@ function facePerson(person, toFace) {
     return hasOwn.call(opposites, direction);
 }
 
-/**
-   Intended to be used in OnGenerateCommands
-   i.e. followPath(GetCurrentPerson(),  'EEENNNWWWWSSSE');
-   i.e. SetPersonScript('Jimmy', SCRIPT_COMMAND_GENERATOR, 'FollowPath("Jimmy", "NNDESSWF")');
-   Where the path is a string of N, E, S, W, D, F (north, east, south, west, delay, finish)
-   It returns:
-   -1 = the person's path has finished (encountered an F)
-   0 = the person has not moved
-   1 = the person has moved
-*/
+function nextPathToken(path, index) {
+    var token = path.charAt(index) || '', next = path.charAt(index + 1);
+    if (next && next.toLowerCase() == next)
+        token += next;
+    return token;
+}
+
+function stepsForDirection(direction) {
+    switch (direction) {
+    case 'N': case 'S':
+        return GetTileHeight();
+    case 'E': case 'W':
+        return GetTileWidth();
+    default:
+        return Math.floor(Math.sqrt(GetTileWidth() * GetTileHeight()));
+    }
+}
+
+function queuePath(person, path) {
+    for (var i = 0, direction; direction = nextPathToken(path, i), i < path.length; i += direction.length) {
+        QueuePersonCommand(person,
+                           global['COMMAND_FACE_' + direction.split('').map(function(c) fullDirections[c.toLowerCase()]).join('')],
+                           true);
+        stepsForDirection(direction).times(function () {
+            moveCommands[direction].each(function (command, index, commands) {
+                QueuePersonCommand(person, command, index < commands.length - 1);  // Make all but the last immediate.
+            });
+        });
+    }
+}
+
 function followPath(person, path) {
-    var pathState = 0, pathData = followPath.list[person], dx, dy;
-
-    function getFollowPathDelta(index) {
-	var delta = 0;
-	if (index >= 0 && index < path.length) {
-	    switch (path.charAt(index)) {
-            case 'N': case 'S': delta = GetTileHeight(); break;
-            case 'E': case 'W': delta = GetTileWidth(); break;
-            case 'D': case 'F': delta = Math.sqrt(GetTileWidth() * GetTileHeight()); break;
-	    } 
-	}
-	return delta;
-    }
-
+    var pathData = followPath.list[person], direction;
     if (!hasOwn.call(followPath.list, person)) {
-	pathData = followPath.list[person] = {
-	    name: person,
-	    path: path,
-	    index: 0,
-	    delta: getFollowPathDelta(0)
-	};
+        pathData = followPath.list[person] = {
+            path: path,
+            index: 0
+        };
     }
 
+    // Reset our progress if the path changed.
     if (pathData.path != path) {
-	pathData.path = path;
-	pathData.index = 0;
-	pathData.delta = getFollowPathDelta(0);
+        pathData.path = path;
+        pathData.index = 0;
     }
 
-    if (pathData.delta == 0) {
-	if (pathData.path.charAt(pathData.index) != 'F')
-	    ++pathData.index;
-	pathData.delta = getFollowPathDelta(pathData.index);
+    direction = nextPathToken(path, pathData.index);
+    if (direction == 'F') {
+        Arq.console.success(person + ' finished following a path.');
+        return true;  // To remove ourself automatically from a hooklist.
     }
-
-    if (pathData.index >= path.length) {
-	pathData.index = 0;
-	pathData.delta = getFollowPathDelta(pathData.index);
-    }
-
-    function doCommand(direction, xIncrement, yIncrement) {
-	dx += xIncrement;
-	dy += yIncrement;
-	QueuePersonCommand(person, global['COMMAND_FACE_' + direction], true);
-	if (!IsPersonObstructed(person, dx, dy)) {
-	    QueuePersonCommand(person, global['COMMAND_MOVE_' + direction], false);
-	    --pathData.delta;
-	    pathState = 1;
-	}
-    }
-
-    if (pathData.index >= 0 && pathData.index < path.length) {
-	dx = GetPersonX(person);
-	dy = GetPersonY(person);
-	switch (pathData.path.charAt(pathData.index)) {
-	case 'N':
-	    doCommand('NORTH', 0, -1);
-	    break;
-	case 'S':
-	    doCommand('SOUTH', 0, 1);
-	    break;
-	case 'E':
-	    doCommand('EAST', 1, 0);
-	    break;
-	case 'W':
-	    doCommand('WEST', -1, 0);
-	    break;
-	case 'D':
-	    QueuePersonCommand(person, COMMAND_WAIT, false);
-	    --pathData.delta;
-	    break;
-	case 'F':
-	    pathState = -1;
-	    break;
-	}
-    }
-
-    return pathState;
+    queuePath(person, nextPathToken(path, pathData.index));
+    pathData.index += direction.length;
+    if (pathData.index >= path.length)
+        pathData.index = 0;
+    return false;
 }
 followPath.list = {};
 
@@ -189,5 +173,6 @@ exports.move = move;
 exports.moveDirection = moveDirection;
 exports.moveToward = moveToward;
 exports.facePerson = facePerson;
+exports.queuePath = queuePath;
 exports.followPath = followPath;
 
