@@ -4,7 +4,7 @@ var current = {hour: 0, minute: 0}, alphas = {
     12: 0,   13: 0,   14: 0,  15: 0,   16: 0,   17: 0,
     18: 30,  19: 60,  20: 80, 21: 100, 22: 150, 23: 160
 },
-HookList = require('hook-list').HookList,
+HookList = require('Arq/hook-list').HookList,
 onHourChange = HookList(),
 onMinuteChange = HookList(),
 timeHookLists = {},

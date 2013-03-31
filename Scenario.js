@@ -137,24 +137,47 @@ Scenario.defineAction("call", {
 
 Scenario.defineAction("facePerson", {
 	start: function(host,state,Person,Direction) {
-		var FaceCommand;
+		var XFaceCommand;
+		var YFaceCommand;
 		switch (Direction.toLowerCase()) {
 		case "n": case "north":
-			FaceCommand = COMMAND_FACE_NORTH;
+			XFaceCommand = COMMAND_WAIT;
+			YFaceCommand = COMMAND_FACE_NORTH;
 			break;
 		case "s": case "south":
-			FaceCommand = COMMAND_FACE_SOUTH;
-			break;
-		case "e": case "east":
-			FaceCommand = COMMAND_FACE_EAST;
+			XFaceCommand = COMMAND_WAIT;
+			YFaceCommand = COMMAND_FACE_SOUTH;
 			break;
 		case "w": case "west":
-			FaceCommand = COMMAND_FACE_WEST;
+			XFaceCommand = COMMAND_FACE_WEST;
+			YFaceCommand = COMMAND_WAIT;
+			break;
+		case "e": case "east":
+			XFaceCommand = COMMAND_FACE_EAST;
+			YFaceCommand = COMMAND_WAIT;
+			break;
+		case "nw": case "northwest":
+			XFaceCommand = COMMAND_FACE_WEST;
+			YFaceCommand = COMMAND_FACE_NORTH;
+			break;
+		case "ne": case "northeast":
+			XFaceCommand = COMMAND_FACE_EAST;
+			YFaceCommand = COMMAND_FACE_NORTH;
+			break;
+		case "sw": case "southwest":
+			XFaceCommand = COMMAND_FACE_WEST;
+			YFaceCommand = COMMAND_FACE_SOUTH;
+			break;
+		case "se": case "southeast":
+			XFaceCommand = COMMAND_FACE_EAST;
+			YFaceCommand = COMMAND_FACE_SOUTH;
 			break;
 		default:
-			FaceCommand = COMMAND_WAIT;
+			XFaceCommand = COMMAND_WAIT;
+			YFaceCommand = COMMAND_WAIT;
 		}
-		QueuePersonCommand(Person,FaceCommand,true);
+		QueuePersonCommand(Person,XFaceCommand,true);
+		QueuePersonCommand(Person,YFaceCommand,true);
 	},
 });
 
@@ -323,40 +346,77 @@ Scenario.defineAction("walkPerson", {
 			else SpeedVector = state.OldSpeed;
 		var XMovement;
 		var YMovement;
-		var FaceCommand;
+		var XFaceCommand;
+		var YFaceCommand;
 		var StepCount;
-		switch (Direction) {
-			case "n":
-				FaceCommand = COMMAND_FACE_NORTH;
+		switch (Direction.toLowerCase()) {
+			case "n": case "north":
+				XFaceCommand = COMMAND_WAIT;
+				YFaceCommand = COMMAND_FACE_NORTH;
 				XMovement = COMMAND_WAIT;
 				YMovement = COMMAND_MOVE_NORTH;
 				StepCount = Distance / SpeedVector[1];
 				break;
-			case "s":
-				FaceCommand = COMMAND_FACE_SOUTH;
+			case "s": case "south":
+				XFaceCommand = COMMAND_WAIT;
+				YFaceCommand = COMMAND_FACE_SOUTH;
 				XMovement = COMMAND_WAIT;
 				YMovement = COMMAND_MOVE_SOUTH;
 				StepCount = Distance / SpeedVector[1];
 				break;
-			case "w":
-				FaceCommand = COMMAND_FACE_WEST;
+			case "w": case "west":
+				XFaceCommand = COMMAND_FACE_WEST;
+				YFaceCommand = COMMAND_WAIT;
 				XMovement = COMMAND_MOVE_WEST;
 				YMovement = COMMAND_WAIT;
 				StepCount = Distance / SpeedVector[0];
 				break;
-			case "e":
-				FaceCommand = COMMAND_FACE_EAST;
+			case "e": case "east":
+				XFaceCommand = COMMAND_FACE_EAST;
+				YFaceCommand = COMMAND_WAIT;
 				XMovement = COMMAND_MOVE_EAST;
 				YMovement = COMMAND_WAIT;
 				StepCount = Distance / SpeedVector[0];
 				break;
+			case "nw": case "northwest":
+		    		XFaceCommand = COMMAND_FACE_WEST;
+		    		YFaceCommand = COMMAND_FACE_NORTH;
+		    		XMovement = COMMAND_MOVE_WEST;
+				YMovement = COMMAND_MOVE_NORTH;
+				StepCount = Distance / SpeedVector[0];
+				break;
+			case "ne": case "northeast":
+		    		XFaceCommand = COMMAND_FACE_EAST;
+		    		YFaceCommand = COMMAND_FACE_NORTH;
+		    		XMovement = COMMAND_MOVE_EAST;
+				YMovement = COMMAND_MOVE_NORTH;
+				StepCount = Distance / SpeedVector[0];
+				break;
+			case "sw": case "southwest":
+		    		XFaceCommand = COMMAND_FACE_WEST;
+		    		YFaceCommand = COMMAND_FACE_SOUTH;
+		    		XMovement = COMMAND_MOVE_WEST;
+				YMovement = COMMAND_MOVE_SOUTH;
+				StepCount = Distance / SpeedVector[0];
+				break;
+			case "se": case "southeast":
+		    		XFaceCommand = COMMAND_FACE_EAST;
+		    		YFaceCommand = COMMAND_FACE_SOUTH;
+		    		XMovement = COMMAND_MOVE_EAST;
+				YMovement = COMMAND_MOVE_SOUTH;
+				StepCount = Distance / SpeedVector[0];
+				break;
 			default:
-				FaceCommand = COMMAND_WAIT;
+				XFaceCommand = COMMAND_WAIT;
+		    		YFaceCommand = COMMAND_WAIT;
 				XMovement = COMMAND_WAIT;
 				YMovement = COMMAND_WAIT;
 				StepCount = 0;
 		}
-		if (FaceFirst) QueuePersonCommand(state.Person,FaceCommand,true);
+		if (FaceFirst) {
+		    QueuePersonCommand(state.Person,XFaceCommand,true);
+		    QueuePersonCommand(state.Person,YFaceCommand,true);
+		}
 		for (iStep = 0; iStep < StepCount; ++iStep) {
 			QueuePersonCommand(state.Person,XMovement,true);
 			QueuePersonCommand(state.Person,YMovement,true);

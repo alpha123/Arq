@@ -1,5 +1,5 @@
-var BasicEvent = require('Arq/basic-event').BasicEvent,
-addSymbolMethods = require('Arq/loadable').Loadable.addSymbolMethods,
+var {BasicEvent} = require('Arq/basic-event'),
+{addSymbolMethods} = require('Arq/loadable').Loadable,
 Zone = new Class({
     Implements: BasicEvent,
     file: 'events/zones'
@@ -9,7 +9,8 @@ BasicEvent.setup(Zone);
 function doZone(id) {
     if (!Zone.all[id])
 	Arq.logError('zone "' + id + '" does not exist');
-    Zone.all[id].run();
+    else
+        Zone.all[id].run();
 }
 
 exports.init = BasicEvent.initFunction(Zone, 'doZone', doZone);

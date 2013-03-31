@@ -1,6 +1,6 @@
 // Utilities I use not found in MooTools
 
-(function () {
+(function (undefined) {
 
 String.implement('startsWith', function (substring) {
     return this.indexOf(substring) == 0;
@@ -107,12 +107,20 @@ Array.implement('pluck', function (key) {
 
 Array.implement('partition', function (fn, thisObject) {
     for (var trueArray = [], falseArray = [], i = 0, l = this.length; i < l; ++i) {
-	if (fn.call(thisObject, this[i], i))
+	if (fn.call(thisObject, this[i], i, this))
 	    trueArray.push(this[i]);
 	else
 	    falseArray.push(this[i]);
     }
     return [trueArray, falseArray];
+});
+
+Array.implement('filterMap', function (fn, thisObject) {
+    for (var resultArray = [], result, i = 0, l = this.length; i < l; ++i) {
+        if ((result = fn.call(thisObject, this[i], i, this)) === undefined)
+            resultArray.push(result);
+    }
+    return resultArray;
 });
 
 

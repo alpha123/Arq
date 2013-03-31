@@ -1,4 +1,4 @@
-var {Loadable} = require('Arq/loadable'), {HookList} = require('hook-list'),
+var {Loadable} = require('Arq/loadable'), {HookList} = require('Arq/hook-list'),
 {Item, loadItems} = require('Arq/battle-system/item'), {Ability} = require('Arq/battle-system/ability'),
 {Spritesets} = require('Arq/resources'), {Entity, entityLoadableDefaults} = require('Arq/battle-system/entity'),
 {AI} = require('Arq/battle-system/ai'), {StatusType} = require('Arq/battle-system/status-type'),

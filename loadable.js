@@ -12,7 +12,7 @@ var Loadable = new Class({
     newLoadable: function (object) {
 	var options = this.constructor.loadableOptions;
 	(options.beforeMerge || function () { })(object, this);
-        merge(this, object);
+        Object.append(this, object);
         merge(this, options.members || {});
         Object.each(options.defaults || {}, function (value, key) {
             if (this[key] == null)
@@ -35,20 +35,22 @@ Loadable.setup = function (loadable, options) {
 
     loadable.extend({
 	isLoaded: false,
+        _load: function (file) {
+	    if (Arq.fileExists(file)) {
+		if (options.requires) {
+		    Array.from(options.requires).each(function (otherLoadable) {
+			otherLoadable.load();
+			if (typeOf(otherLoadable.all) == 'object')
+			    loadable.addSymbols(otherLoadable.all);
+		    });
+		}
+		loading(file.slice(file.lastIndexOf('/') + 1, -3).replace(/-/g, ' '));
+		options.process(Loadable.load(file, options.symbols));
+	    }
+        },
 	load: function () {
 	    if (!loadable.isLoaded) {
-		var file = '~/scripts/' + options.file + '.js';
-		if (Arq.fileExists(file)) {
-		    if (options.requires) {
-			Array.from(options.requires).each(function (otherLoadable) {
-			    otherLoadable.load();
-			    if (typeOf(otherLoadable.all) == 'object')
-				loadable.addSymbols(otherLoadable.all);
-			});
-		    }
-		    loading(file.slice(file.lastIndexOf('/') + 1, -3).replace(/-/g, ' '));
-		    options.process(Loadable.load(file, options.symbols));
-		}
+                loadable._load('~/scripts/' + options.file + '.js');
 		loadable.isLoaded = true;
 	    }
 	},

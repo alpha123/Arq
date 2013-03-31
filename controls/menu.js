@@ -1,4 +1,4 @@
-var {HookList} = require('hook-list'),
+var {HookList} = require('Arq/hook-list'),
 activeColor = CreateColor(0, 255, 255),
 inactiveColor = CreateColor(255, 255, 255),
 unselectableColor = CreateColor(128, 128, 128),

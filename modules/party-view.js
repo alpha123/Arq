@@ -22,12 +22,13 @@ function handleSpeed(member) {
 		member.speed.heal(member.stamina.current / 5);
 	}
 	else {
-	    member.stamina.damage(Lithonite.isDashing ? 0.1 : 0.05);
-	    if (member.stamina.current < member.stamina.max * 0.4)
+            if (Lithonite.isDashing)
+	        member.stamina.damage(0.1);
+	    if (member.stamina.current < 1)
 		member.speed.damage(1 / member.stamina.current / 10);
 	}
     }
-    var staminaTimer = doStamina.periodical(1000);
+    var staminaTimer = doStamina.periodical(2000);
 
     unhandleSpeed = function () {
 	member.speed.removeEvent('change', doHandleSpeed);
@@ -79,7 +80,7 @@ PartyMember.hooks.setInput.add(function (member) {
     if (options.showParty) {
 	Object.each(PartyMember.active, function (m) {
 	    if (!m.isInput)
-		FollowPerson(m.mapName, member.mapName, m.spriteset.images[0].width);
+		FollowPerson(m.mapName, member.mapName, Math.max.apply(Math, m.spriteset.images.pluck('width')));
 	});
     }
 

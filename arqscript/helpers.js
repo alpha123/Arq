@@ -23,7 +23,7 @@ exports.keywordargs =
             if (word.startsWith("__kwargs$"))\n\
                 args.splice(index, 0, Object.filter(kwargs, function (v, k) !words.contains(k)));\n\
             else if (kwargs.hasOwnProperty(word))\n\
-                args.splice(index, 0, kwargs[word]);\n\
+                args[index] = kwargs[word];\n\
         });\n\
         return fn.apply(this, args);\n\
     };\n\

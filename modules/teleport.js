@@ -1,4 +1,4 @@
-var Tile = require('Arq/tile').Tile, HookList = require('hook-list').HookList,
+var Tile = require('Arq/tile').Tile, HookList = require('Arq/hook-list').HookList,
 before = HookList(), after = HookList(), backCoords = {}, backMap;
 
 function goTo(map, entrance, coords) {

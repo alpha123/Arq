@@ -8,7 +8,7 @@
 
 //var rmenu = {};
 
-var HookList = require('hook-list').HookList,
+var HookList = require('Arq/hook-list').HookList,
 Menu = new Class({
     Implements: [Options, Events],
 

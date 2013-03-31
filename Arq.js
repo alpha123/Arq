@@ -52,7 +52,7 @@ var Arq = (function () {
 
     var log = OpenLog('arq.log'),
     hasOwn = Object.prototype.hasOwnProperty,
-    HookList = require('hook-list').HookList,
+    HookList = require('Arq/hook-list').HookList,
     Resources = require('Arq/resources'),
     StartMenu = require('Arq/controls/start-menu').Menu,
     MenuItem = require('Arq/controls/start-menu').MenuItem,

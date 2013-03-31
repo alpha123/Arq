@@ -16,7 +16,9 @@ inputHeight = fontHeight + 8, colors = {
     //inputBackground: CreateColor(0, 0, 0, 215),
     //borderDark: CreateColor(35, 35, 35, 200),
     //borderLight: CreateColor(158, 158, 158, 200),
-    info: CreateColor(255, 255, 255),
+    message: CreateColor(255, 255, 255),
+    info: CreateColor(26, 117, 230),  // a pleasant blue
+    success: CreateColor(0, 255, 0),
     warning: CreateColor(255, 255, 0),
     error: CreateColor(255, 0, 0)
 };
@@ -28,7 +30,7 @@ function addLine(line, indent, color) {
     var pad = indent ? ' ' : '', i = 0, l;
 
     Array.from(line).each(function (line) {
-	lines.push({text: pad + line, color: color || colors.info});
+	lines.push({text: pad + line, color: color || colors.message});
     });
 }
 
@@ -76,7 +78,7 @@ exports.getCommand = function (cmd) {
 exports.init = function (fake) {
     if (fake) {
 	exports.toggle = exports.render = exports.update = exports.addCommand =
-	    exports.info = exports.warning = exports.error = function () { };
+	    exports.info = exports.success = exports.warning = exports.error = function () { };
     }
     else {
 	require('Arq/debug/console-commands');
@@ -259,7 +261,11 @@ function update() {
 exports.update = update;
 
 exports.info = function (string) {
-    addLine(string, false);
+    addLine(string, false, colors.info);
+};
+
+exports.success = function (string) {
+    addLine(string, false, colors.success);
 };
 
 exports.warn = function (string) {
@@ -267,7 +273,13 @@ exports.warn = function (string) {
 };
 
 exports.error = function (string) {
-    addLine(string, false, colors.error);
+    var location, line, file, fn;
+    // Cool trick from Radnen to get the line number and file.
+    try { location = (new Error).stack.split('\n')[2]; } catch (e) { }
+    line = location.reverse().split(':', 1)[0].reverse();
+    file = location.split('@')[1];
+    file = file.slice(0, file.indexOf(':'));
+    addLine(string + ' (' + file + ', line ' + line + ')', false, colors.error);
 };
 
 addCommand('Help', 'Lists all commands or info for a particular command', 'help [command]', function (data) {

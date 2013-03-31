@@ -35,6 +35,7 @@ var persist = (function () {
     var log = null;
     var logging = false;
     var takeNotes = false;
+    var errorHandler = function () { };
 
     /**
      * Set an output log for debugging persist.js and its use.
@@ -86,6 +87,11 @@ var persist = (function () {
     {
         if (log && logging && takeNotes)
             log.write("Note: " + message);
+    }
+
+    function setErrorHandler(fn)
+    {
+        errorHandler = fn;
     }
 
     /****************************************
@@ -458,7 +464,7 @@ var persist = (function () {
             runMapScript(map, which);
         } catch (e) {
             logError("triggerMapEvent: event " + which + " for " + map + ": " + e);
-            Abort(e);
+            errorHandler(e);
         }
     }
 
@@ -474,7 +480,7 @@ var persist = (function () {
             runPersonScript(map, person, which);
         } catch (e) {
             logError("triggerPersonEvent: event " + which + " for " + person + " on " + map + ": " + e);
-            Abort(e);
+            errorHandler(e);
         }
     }
 
@@ -591,6 +597,7 @@ var persist = (function () {
         setLog: setLog,
         startLogging: startLogging,
         stopLogging: stopLogging,
+        setErrorHandler: setErrorHandler,
         getScriptPath: getScriptPath,
         setScriptPath: setScriptPath,
         getWorldState: getWorldState,
