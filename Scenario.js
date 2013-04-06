@@ -434,7 +434,7 @@ Scenario.defineAction("walkPerson", {
 });
 
 // Properties
-Scenario.prototype.frameRate getter = function()
+Scenario.prototype.frameRate = function()
 {
 	return this.FrameRate;
 };

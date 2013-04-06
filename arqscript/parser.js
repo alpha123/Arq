@@ -2,6 +2,7 @@ var hasOwn = Object.prototype.hasOwnProperty;
 
 exports.parser = function (tokens) {
     var token,
+    tokenIndex = 0,
     symbols = {},
     atomID = 0,
     atomIDs = {},
@@ -168,15 +169,11 @@ exports.parser = function (tokens) {
 	var type, sym, tok, value, line;
 	if (id && token.id != id)
 	    throw new Error('Expected "' + id + '", got "' + token.id + '" at line ' + token.line);
-	try {
-	    do {
-		tok = tokens.next();
-	    } while (tok.type == 'comment' || (tok.type == 'operator' && tok.value == 'nl'));  // Ignore comments and newlines, for now.
-	}
-	catch (e if e instanceof StopIteration) {
-	    token = symbols['(end)'];
-	    return token;
-	}
+	do {
+	    tok = tokens[tokenIndex++];
+	} while (tok && tok.type == 'comment' || (tok && tok.type == 'operator' && tok.value == 'nl'));  // Ignore comments and newlines, for now.
+	if (!tok)
+	    return (token = symbols['(end)']);
 	value = tok.value;
 	type = tok.type;
 	line = tok.line;

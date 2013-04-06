@@ -188,22 +188,21 @@ console.addCommand('Reload', 'Reloads a CommonJS module', 'reload variable file'
 
 console.addCommand('arqscriptlex', 'Converts a string into ArqScript tokens', 'arqscriptlex code...',
 function () {
-    var {tokenizer} = require('Arq/arqscript/lexer'), tokens = tokenizer(toCode(arguments), {caseSensitive: true}), token;
-    for (token in tokens)
-	console.info(token.toSource());
+    var {tokenize} = require('Arq/arqscript/lexer'), tokens = tokenize(toCode(arguments), {caseSensitive: true});
+    console.info(tokens.toSource());
 });
 
 console.addCommand('arqscriptparse', 'Parses ArqScript code into an AST', 'arqscriptparse code...',
 function () {
-    var {tokenizer} = require('Arq/arqscript/lexer'), {parser} = require('Arq/arqscript/parser'),
-        parse = parser(tokenizer(toCode(arguments), {caseSensitive: true}));
+    var {tokenize} = require('Arq/arqscript/lexer'), {parser} = require('Arq/arqscript/parser'),
+        parse = parser(tokenize(toCode(arguments), {caseSensitive: true}));
     return parse().toSource().replace(/:/g, ': ').replace(/,/g, ',\n').split('\n');
 });
 
 function arqScriptCompile() {
-    var {tokenizer} = require('Arq/arqscript/lexer'), {parser} = require('Arq/arqscript/parser'),
+    var {tokenize} = require('Arq/arqscript/lexer'), {parser} = require('Arq/arqscript/parser'),
         {compiler} = require('Arq/arqscript/compiler');
-    return compiler(parser(tokenizer(toCode(arguments), {caseSensitive: true}))(),
+    return compiler(parser(tokenize(toCode(arguments), {caseSensitive: true}))(),
 		    {bare: true, caseSensitive: true, scenario: 'scene'})().split('\n');
 }
 console.addCommand('arqscriptcompile', 'Compiles ArqScript into JavaScript', 'arqscriptcompile code...', arqScriptCompile);
@@ -213,11 +212,11 @@ console.addCommand('arqscripteval', 'Evaluates ArqScript code', 'arqscripteval c
 });
 
 console.addCommand('arqscriptexec', 'Executes a file of ArqScript code', 'arqscriptexec file', function (filename) {
-    var {tokenizer} = require('Arq/arqscript/lexer'), {parser} = require('Arq/arqscript/parser'),
+    var {tokenize} = require('Arq/arqscript/lexer'), {parser} = require('Arq/arqscript/parser'),
         {compiler} = require('Arq/arqscript/compiler'), file = OpenRawFile('~/' + filename), code, result;
     try { code = CreateStringFromByteArray(file.read(file.getSize())); }
     finally { file.close(); }
-    result = eval(compiler(parser(tokenizer(code, {caseSensitive: true}))(), {scenario: 'scene', caseSensitive: true})());
+    result = eval(compiler(parser(tokenize(code, {caseSensitive: true}))(), {scenario: 'scene', caseSensitive: true})());
     if (typeof result == 'string')
 	return result.split('\n');
     return result;
