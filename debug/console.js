@@ -44,7 +44,10 @@ input.height -= 2;
 input.y = height - input.height - 40;
 
 exports.__defineGetter__('hasInput', function () hasInput);
-exports.__defineSetter__('hasInput', function (value) { hasInput = value; });
+exports.__defineSetter__('hasInput', function (value) {
+    hasInput = value;
+    input.setActive(value);
+});
 
 function addLine(line, indent, color) {
     var pad = indent ? ' ' : '', i = 0, l;
