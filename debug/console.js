@@ -22,6 +22,10 @@ input = new Input({
         }
         input.done = false;
         input.setActive(true);
+    },
+    onEscape: function () {
+        input.done = false;
+        input.setActive(true);
     }
 }), colors = {
     //trim: CreateColor(90, 90, 90, 200),
