@@ -1,3 +1,5 @@
+var {Input} = require('Arq/controls/input');
+
 function rightPad(str, padString, length) {
     while (str.length < length)
         str = str + padString;
@@ -9,7 +11,19 @@ visible = 0, font = GetSystemFont(), fontHeight = font.getHeight(), width = GetS
 height = GetScreenHeight() / 2, keyString = '', cursorVisible = true, startTime = GetTime(), hasInput = true,
 cursorDelay = 400, cursorPos = 0, upKey = 1, white = CreateColor(255, 255, 255), borderWidth = 4, scrollPos = 0,
 arrowUp = GetSystemUpArrow(), arrowDown = GetSystemDownArrow(), showUp = false, showDown = false,
-inputHeight = fontHeight + 8, colors = {
+input = new Input({
+    onEnter: function (text, input) {
+        addLine(text);
+        try {
+            doCommand(text);
+        }
+        catch (e) {
+            addLine(' ' + e);
+        }
+        input.done = false;
+        input.setActive(true);
+    }
+}), colors = {
     //trim: CreateColor(90, 90, 90, 200),
     background: CreateColor(0, 0, 0, 200),
     border: CreateColor(0, 0, 0, 200),
@@ -22,6 +36,8 @@ inputHeight = fontHeight + 8, colors = {
     warning: CreateColor(255, 255, 0),
     error: CreateColor(255, 0, 0)
 };
+input.height -= 2;
+input.y = height - input.height - 40;
 
 exports.__defineGetter__('hasInput', function () hasInput);
 exports.__defineSetter__('hasInput', function (value) { hasInput = value; });
@@ -30,7 +46,7 @@ function addLine(line, indent, color) {
     var pad = indent ? ' ' : '', i = 0, l;
 
     Array.from(line).each(function (line) {
-	lines.push({text: pad + line, color: color || colors.message});
+        lines.push({text: pad + line, color: color || colors.message});
     });
 }
 
@@ -46,14 +62,14 @@ function doCommand(command) {
     if (cmd) {
         result = cmd.action.apply(null, parms.slice(1));
         if (result !== undefined)
-	    addLine(result, true);
+            addLine(result, true);
     }
     else {
         try {
-	    result = eval(command);
+            result = eval(command);
         }
         catch (e) {
-	    result = e.toString();
+            result = e.toString();
         }
         addLine(result, true);
     }
@@ -61,7 +77,7 @@ function doCommand(command) {
     scrollPos = 0;
 
     if (lines.length > Math.floor(height / fontHeight) - 5)
-	showUp = true;
+        showUp = true;
 }
 
 function addCommand(cmd, desc, usage, action) {
@@ -77,14 +93,14 @@ exports.getCommand = function (cmd) {
 
 exports.init = function (fake) {
     if (fake) {
-	exports.toggle = exports.render = exports.update = exports.addCommand =
-	    exports.info = exports.success = exports.warning = exports.error = function () { };
+        exports.toggle = exports.render = exports.update = exports.addCommand =
+            exports.info = exports.success = exports.warning = exports.error = function () { };
     }
     else {
-	require('Arq/debug/console-commands');
-	KeyHooks.f3.add(toggle);
-	UpdateHooks.add(update);
-	RenderHooks.add(render);
+        require('Arq/debug/console-commands');
+        KeyHooks.f3.add(toggle);
+        UpdateHooks.add(update);
+        RenderHooks.add(render);
     }
     Arq.console = exports;
 };
@@ -92,9 +108,10 @@ exports.init = function (fake) {
 function toggle() {
     visible = visible.wrap(0, 2);
     if (visible == 1)
-	height = GetScreenHeight() / 2;
+        height = GetScreenHeight() / 2;
     else if (visible == 2)
-	height = 40 + inputHeight - borderWidth;
+        height = 40 + input.height - borderWidth;
+    input.y = height - input.height - 40;
     hasInput = true;
 }
 exports.toggle = toggle;
@@ -104,7 +121,7 @@ function render() {
         return;
 
     /*Rectangle(0, 0, 8, height - 40, colors.trim);
-      Rectangle(8, 0, 1, height - 40, colors.borderDark);	
+      Rectangle(8, 0, 1, height - 40, colors.borderDark);        
       Rectangle(9, 0, width - 18, height - 41, colors.background);
       Rectangle(width - 9, 0, 1, height - 40, colors.borderLight);
       Rectangle(width - 8, 0, 8,  height - 40, colors.trim);
@@ -119,143 +136,67 @@ function render() {
       Rectangle(8, height - 32, 1, 24, colors.borderDark);*/
 
     Rectangle(0, 0, borderWidth, height - 40, colors.border);
-    Rectangle(borderWidth, 0, width - borderWidth * 2, height - 40 - borderWidth - inputHeight, colors.background);
+    Rectangle(borderWidth, 0, width - borderWidth * 2, height - 40 - borderWidth - input.height, colors.background);
     Rectangle(width - borderWidth, 0, borderWidth, height - 40, colors.border);
-    Rectangle(borderWidth, height - 40 - borderWidth - inputHeight, width - borderWidth * 2, borderWidth, colors.border);
-    Rectangle(borderWidth, height - 40 - inputHeight, width - borderWidth * 2, inputHeight, colors.background);
+    Rectangle(borderWidth, height - 40 - borderWidth - input.height, width - borderWidth * 2, borderWidth, colors.border);
+    Rectangle(borderWidth, height - 40 - input.height, width - borderWidth * 2, input.height, colors.background);
     Rectangle(0, height - 40, width, borderWidth, colors.border);
 
     if (showUp)
-	arrowUp.blit(width - borderWidth - arrowUp.width, 10);
+        arrowUp.blit(width - borderWidth - arrowUp.width, 10);
     if (showDown)
-	arrowDown.blit(width - borderWidth - arrowDown.width, height - 50 - arrowDown.height);
+        arrowDown.blit(width - borderWidth - arrowDown.width, height - 50 - arrowDown.height);
 
-    var line = height - fontHeight - 40 - inputHeight, l = lines.length - 1 + scrollPos;
+    var line = height - fontHeight - 40 - input.height, l = lines.length - 1 + scrollPos;
 
     if (l * fontHeight < line)
         line = l * fontHeight;
 
     for (; l >= 0; --l) {
-	line -= fontHeight;
-	font.setColorMask(lines[l].color);
-	font.drawText(10, line + fontHeight, lines[l].text);
-	font.setColorMask(white);
+        line -= fontHeight;
+        font.setColorMask(lines[l].color);
+        font.drawText(10, line + fontHeight, lines[l].text);
+        font.setColorMask(white);
     }
 
-    if (hasInput)
-	font.drawText(borderWidth + 1, height - fontHeight - 40, keyString);
-
-    if (hasInput && cursorVisible)
-        font.drawText(borderWidth + 1 + font.getStringWidth(keyString.substr(0, cursorPos)), height - fontHeight - 40, '|');
+    input.render();
 }
 exports.render = render;
 
 function update() {
     if (!visible || !hasInput)
         return;
-
-    // Update cursor state
-    if (GetTime() > startTime + cursorDelay) {
-        startTime = GetTime();
-        cursorVisible = !cursorVisible;
-    }
-
-    if (AreKeysLeft()) {
-        var key = GetKey(), temp;
+    input.update();
+    while (AreKeysLeft()) {
+        var key = GetKey();
         switch (key) {
-	case KEY_BACKSPACE: {
-	    /*keyString = keyString.split('');
-	      keyString.splice((cursorPos - 1).max(0), 1);
-	      keyString = keyString.join('');*/
-	    keyString = keyString.substr(0, keyString.length - 1);
-	    break;
-	}
-	case KEY_UP: {
-	    if (visible == 1) {
-		if (commandHistory.length > 0) {
-		    keyString = commandHistory[commandHistory.length - upKey];
-		    cursorPos = keyString.length;
-		}
-		if (upKey < commandHistory.length)
-		    upKey++;
-	    }
-	    break;
-	}
-	case KEY_DOWN: {
-	    if (visible == 1) {
-		if (commandHistory.length > 0) {
-		    keyString = commandHistory[commandHistory.length - upKey];
-		    cursorPos = keyString.length;
-		}
-		if (upKey > 1)
-		    upKey--;
-	    }
-	    break;
-	}
-	case KEY_ENTER: {
-	    cursorPos = 0;
-	    upKey = 1;
-	    addLine(keyString);
-	    addCmdHistory(keyString);
-	    try {
-		doCommand(keyString);
-	    }
-	    catch (e) {
-		addLine(' ' + e);
-	    }
-	    keyString = '';
-	    break;
-	}
-	case KEY_LEFT: {
-	    if (cursorPos > 0)
-		cursorPos--;
-	    break;
-	}
-	case KEY_RIGHT: {
-	    if (cursorPos < keyString.length)
-		cursorPos++;
-	    break;
-	}
-	case KEY_HOME: {
-	    cursorPos = 0;
-	    break;
-	}
-	case KEY_END: {
-	    cursorPos = keyString.length;
-	    break;
-	}
-	case KEY_PAGEUP: {
-	    var top = lines.length - 1 + scrollPos - (Math.floor(height / fontHeight) - 6);
-	    if (top > 0) {
-		--scrollPos;
-		showDown = true;
-		if (top == 1)
-		    showUp = false;
-	    }
-	    else
-		showUp = false;
-	    break;
-	}
-	case KEY_PAGEDOWN: {
-	    if (scrollPos + 1 < 1) {
-		++scrollPos;
-		showUp = true;
-		if (scrollPos == 0)
-		    showDown = false;
-	    }
-	    else
-		showDown = false;
-	    break;
-	}
-	default: {
-	    temp = keyString.substr(cursorPos, keyString.length);
-	    keyString = keyString.substr(0, cursorPos);
-	    keyString += GetKeyString(key, IsKeyPressed(KEY_SHIFT));
-	    keyString += temp;
-	    cursorPos++;
-	    break;
-	}
-	}
+        case KEY_PAGEUP: {
+            var top = lines.length - 1 + scrollPos - (Math.floor(height / fontHeight) - 6);
+            if (top > 0) {
+                --scrollPos;
+                showDown = true;
+                if (top == 1)
+                    showUp = false;
+            }
+            else
+                showUp = false;
+            break;
+        }
+        case KEY_PAGEDOWN: {
+            if (scrollPos + 1 < 1) {
+                ++scrollPos;
+                showUp = true;
+                if (scrollPos == 0)
+                    showDown = false;
+            }
+            else
+                showDown = false;
+            break;
+        }
+        default:
+            input.handleInput(key);
+            break;
+        }
     }
 }
 exports.update = update;
@@ -290,7 +231,7 @@ addCommand('Help', 'Lists all commands or info for a particular command', 'help 
     }
     for (i in commands) {
         if (commands.hasOwnProperty(i))
-	    cmds.push(rightPad(commands[i].command, ' ', longestCmdName + 4) + commands[i].desc);
+            cmds.push(rightPad(commands[i].command, ' ', longestCmdName + 4) + commands[i].desc);
     }
     return cmds;
 });
@@ -305,13 +246,13 @@ addCommand('Dump', 'Dumps console output to a file', 'dump [file]', function (fi
     filename = filename.startsWith('~/') ? filename : '~/other/' + filename;
     var dump = lines.map(function (l) l.text).join('\n'), file = OpenRawFile(filename, true);
     try {
-	file.write(CreateByteArrayFromString(dump));
+        file.write(CreateByteArrayFromString(dump));
     }
     catch (e) {
-	return 'Couldn\'t dump to "' + filename + '": ' + e;
+        return 'Couldn\'t dump to "' + filename + '": ' + e;
     }
     finally {
-	file.close();
+        file.close();
     }
     return 'Wrote ~' + (dump.sizeInBytes() / 1000).toFixed(2) + 'kb to "' + filename + '"';
 });

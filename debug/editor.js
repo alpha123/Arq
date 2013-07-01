@@ -1,36 +1,45 @@
+var {Input} = require('Arq/controls/input');
+
 Object.merge(exports, (function () {
 
 var running = false, Editor = {
     tileOutlineColor: CreateColor(0x1d, 0x77, 0xfe),
     
     showInput: function (initial, onEnter) {
-        var input = new Input(GetScreenWidth() / 2 - 100, GetScreenHeight() / 2, 200, 20, new Style()),
-        done = false;
-        input.txt = initial;
-        input.useWindow = true;
-        input.onEnter = function () {
-            onEnter(input);
-            done = true;
-        };
+        var input = new Input({
+            x: GetScreenWidth() / 2 - 100,
+            y: GetScreenHeight() / 2,
+            width: 200,
+            height: 20,
+            text: initial,
+            onEnter: onEnter
+        }),
+        windowStyle = GetSystemWindowStyle();
+        KeyHooks.escape.add(function () {
+            input.finish();
+        }, 10);
         UpdateHooks.add(function () {
             input.update();
-            return done;
+            while (AreKeysLeft())
+                input.handleInput(GetKey());
+            return input.done;
         });
         RenderHooks.add(function () {
-            input.blit();
-            return done;
+            windowStyle.drawWindow(input.x - 10, input.y - 10, input.width + 20, input.height + 20);
+            input.render();
+            return input.done;
         });
     },
     
     saveMap: function () {
-        Editor.showInput(GetCurrentMap().slice(0, -4) + '-new.rmp', function (input) {
-            GetMapEngine().save(input.txt);
+        Editor.showInput(GetCurrentMap().slice(0, -4) + '-new.rmp', function (text) {
+            GetMapEngine().save(text);
         });
     },
     
     changeLayer: function () {
-        Editor.showInput('' + Editor.layer, function (input) {
-            Editor.layer = isNaN(+input.txt) ? Editor.layer : Math.floor(+input.txt);
+        Editor.showInput('' + Editor.layer, function (text) {
+            Editor.layer = isNaN(+text) ? Editor.layer : Math.floor(+text);
             if (Editor.layer > GetNumLayers() - 1)
                 Editor.layer = GetNumLayers() - 1;
             else if (Editor.layer < 0)
@@ -39,8 +48,8 @@ var running = false, Editor = {
     },
     
     changeTile: function () {
-        Editor.showInput('' + (Editor.tile || 0), function (input) {
-            Editor.tile = isNaN(+input.txt) ? Editor.tile : Math.floor(+input.txt);
+        Editor.showInput('' + (Editor.tile || 0), function (text) {
+            Editor.tile = isNaN(+text) ? Editor.tile : Math.floor(+text);
             if (Editor.tile > GetNumTiles() - 1)
                 Editor.tile = GetNumTiles() - 1;
             else if (Editor.tile < 0)
@@ -49,10 +58,10 @@ var running = false, Editor = {
     },
 
     init: function (fake) {
-	if (fake)
-	    Editor.toggle = Editor.on = Editor.off = function () { };
-	else
-	    KeyHooks.f7.add(Editor.toggle);
+        if (fake)
+            Editor.toggle = Editor.on = Editor.off = function () { };
+        else
+            KeyHooks.f7.add(Editor.toggle);
     },
     
     toggle: function () {
@@ -69,9 +78,9 @@ var running = false, Editor = {
         if (Editor.layer == null)
             Editor.layer = GetPersonLayer(Arq.config.player);
         running = true;
-	KeyHooks.s.add(Editor.saveMap, 1, 'mapeditor_savemap');
-	KeyHooks.l.add(Editor.changeLayer, 1, 'mapeditor_changelayer');
-	KeyHooks.t.add(Editor.changeTile, 1, 'mapeditor_changetile');
+        KeyHooks.s.add(Editor.saveMap, 1, 'mapeditor_savemap');
+        KeyHooks.l.add(Editor.changeLayer, 1, 'mapeditor_changelayer');
+        KeyHooks.t.add(Editor.changeTile, 1, 'mapeditor_changetile');
         RenderHooks.add(function () {
             var x = Math.floor(ScreenToMapX(Editor.layer, GetMouseX()) / width),
                 y = Math.floor(ScreenToMapY(Editor.layer, GetMouseY()) / height), tile;
@@ -106,9 +115,9 @@ var running = false, Editor = {
     },
     
     off: function () {
-	KeyHooks.s.remove('mapeditor_savemap');
-	KeyHooks.l.remove('mapeditor_changelayer');
-	KeyHooks.t.remove('mapeditor_changetile');
+        KeyHooks.s.remove('mapeditor_savemap');
+        KeyHooks.l.remove('mapeditor_changelayer');
+        KeyHooks.t.remove('mapeditor_changetile');
         running = false;
     }
 };
