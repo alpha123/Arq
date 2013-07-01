@@ -16,7 +16,7 @@ function Input(options) {
     this.width = options.width || GetScreenWidth();
     this.height = this.font.getHeight() + 2;
     this._renderedText = this.text;
-    this.position = 0;
+    this.position = this.text.length;
     this.done = false;
     this.history = [];
     this.historyPosition = 0;
