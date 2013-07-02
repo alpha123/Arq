@@ -158,7 +158,7 @@ exports.compiler = function (ast, options) {
 	fork: function (node) {
 	    if (!options.scenario)
 		throw new Error('fork statement requires Scenario mode at line ' + node.line);
-	    return options.scenario + '.beginFork();\n' + _(4) + indent(function () $$(node.first)) + _() + options.scenario + '.endFork();\n';
+	    return options.scenario + '.fork();\n' + _(4) + indent(function () $$(node.first)) + _() + options.scenario + '.end();\n';
 	},
 	function: function (node) {
 	    return compilers.assignment(node, compilers.lambda({first: node.second, second: node.third}, false));
