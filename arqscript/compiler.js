@@ -90,7 +90,11 @@ exports.compiler = function (ast, options) {
 	    return nameGet($(node.first), $(node.second));
 	},
 	'[': function () binOps['.'].apply(this, arguments),
-	':': function (node) { throw new Error('":" outside of function call or definition at line ' + node.line); }
+	':': function (node) {
+            if (!options.scenario)
+                throw new Error('":" outside of function call or definition requires Scenario mode at line ' + node.line);
+            return options.scenario + '.dialogue(' + $(node.first) + ', ' + $(node.second) + ')';
+        }
     },
     unOps = {
 	not: '!'

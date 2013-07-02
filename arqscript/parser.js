@@ -293,8 +293,8 @@ exports.parser = function (tokens) {
     assignment(':=');
 
     infix(':', 10, function (left) {
-	if (left.arity != 'name')
-	    throw new Error('Expected a name at line ' + left.line);
+	if (left.arity != 'name' && left.arity != 'literal')
+	    throw new Error('Expected a name or literal at line ' + left.line);
 	this.first = left;
 	if (token.arity == 'operator' && token.value == '...') {
 	    this.second = token;
